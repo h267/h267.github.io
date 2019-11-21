@@ -1,21 +1,42 @@
+// Super Mario Maestro
+// made by h267
+
+/* TODO:
+
+ - More bug fixes
+ - y-offsets for individual tracks [New UI]
+ - Highlight enemies that don't have much room, maybe overlay exclamation point [New UI]
+ - Better error messages to alleviate confusion and allow for better debugging
+ - Player line optionally drags the scrollbar with it (maybe a play all button)
+ - A small info button that shows how to use everything and shows patch notes [New UI]
+ - GM Drum Kit Support / More Instruments [Before instrument changes]
+ - Changing/replacing instruments in tracks [New UI]
+ - Prompting instrument changes if the entity limit runs out [New UI]
+ - Handle dynamic tempo changes [New UI]
+ - x-offset number input or other way to nudge x-offset [New UI]
+ - Music levels on tracks: Loup's Algorithms, then Ren's once acceleration is known
+ - More/All instrument options
+
+*/
+
 var reader = new FileReader;
 var midi;
 var bpms = [
-      85, // Walking
-      175, // Running
       28, // Slow Autoscroll
-      57, // Medium Autoscroll
-      115, // Fast Autoscroll
+      // 28, // Backwards Normal Conveyor, Walking
       56, // Normal Conveyor, Idle
-      143, // Normal Conveyor, Walking
-      231, // Normal Conveyor, Running
+      57, // Medium Autoscroll
+      // 57, // Backwards Fast Conveyor, Running
+      85, // Walking
       113, // Fast Conveyor, Idle
-      203, // Fast Conveyor, Walking
-      286, // Fast Conveyor, Running
-      //28, // Backwards Normal Conveyor, Walking
       114, // Backwards Normal Conveyor, Running
-      //57, // Backwards Fast Conveyor, Running
+      115, // Fast Autoscroll
+      143, // Normal Conveyor, Walking
       //143 // Blue Skull Ride, Idle
+      175, // Running
+      203, // Fast Conveyor, Walking  
+      231, // Normal Conveyor, Running
+      286, // Fast Conveyor, Running
 ];
 var tiles;
 var bgs;
@@ -35,6 +56,7 @@ var bbar = 1;
 var noMouse = false;
 var cursor;
 var noteCount;
+var isNewFile;
 
 document.getElementById('canvas').addEventListener ('mouseout', handleOut, false);
 
@@ -84,12 +106,16 @@ function loadFile(){ // Load file from the file input element
             }
             if(!fileLoaded){showEverything();}
             midi = new MIDIfile(new Uint8Array(reader.result));
+            resetOffsets();
             miniClear();
+            miniBox(ofsX/2,(ofsY/2)+(27/2),(canvas.width/32)-(27/2),canvas.height/32);
             document.getElementById('trkcontainer').innerHTML = '';
             resolution = midi.resolution;
             document.getElementById('respicker').value = midi.precision;
+            isNewFile = true;
             fileLoaded = true;
             placeNoteBlocks(false);
+            isNewFile = false;
             document.getElementById('yofspicker').disabled = false;
             document.getElementById('respicker').disabled = false;
             //console.log(midi.noteCount+' notes total');
@@ -105,8 +131,8 @@ function placeNoteBlocks(noRecBPM){
       setMiniWidth(width/2);
       var height = 128;
       var currentProgram = new Array(16);
-      currentProgram.fill(0);
       var uspqn = 500000; // Assumed
+      var haveTempo = false; // TODO: Get rid of this when adding dynamic tempo
       level = new Level();
             for(i=0;i<midi.tracks.length;i++){
                   // Add checkbox with label for each track
@@ -120,9 +146,15 @@ function placeNoteBlocks(noRecBPM){
                         var labl = document.createElement('label');
                         labl.for = 'chk'+i;
                         labl.style = 'font-size:12px';
-                        labl.innerHTML = 'Track '+i;
+                        labl.innerHTML = midi.trkLabels[i];
+                        if(!midi.hasNotes[i]){ // Patch this in without breaking anything
+                              chkbox.style = 'display: none'
+                              labl.style = labl.style + '; display: none'
+                        }
                         document.getElementById('trkcontainer').appendChild(labl);
-                        document.getElementById('trkcontainer').appendChild(document.createElement('br'));
+                        if(midi.hasNotes[i]){
+                              document.getElementById('trkcontainer').appendChild(document.createElement('br'));
+                        }
                   }
 
                   level.addArea(new Area(width,height));
@@ -132,14 +164,16 @@ function placeNoteBlocks(noRecBPM){
                         x += (midi.tracks[i][j].deltaTime/midi.timing)*resolution;
                         //console.log('x += '+Math.round((midi.tracks[i][j].deltaTime/midi.timing)*4));
                         //error += Math.abs(Math.round((midi.tracks[i][j].deltaTime/midi.timing)*4)-((midi.tracks[i][j].deltaTime/midi.timing)*4));
-                        if(midi.tracks[i][j].type == 65361){ // Tempo Change
+                        if(midi.tracks[i][j].type == 65361 && !haveTempo){ // Tempo Change
                               uspqn = midi.tracks[i][j].data[0];
                               //console.log(midi.tracks[i][j].data[0]+' uspqn');
                               //console.log((60000000/uspqn)+' bpm');
                               //setTempoText(Math.round(60000000/uspqn)+' bpm');
                               songBPM = 60000000/uspqn;
+                              refreshTempos(resolution);
                               bpm = reccomendTempo(songBPM,resolution,true);
                               if(!noRecBPM){reccomendRes();}
+                              haveTempo = true;
                               //console.log('tempo = '+uspqn+' / '+midi.timing+' = '+uspqn/midi.timing+' microseconds per tick');
                               //tempo = (uspqn/midi.timing)*bpus[speed];
                               //console.log(tempo+' blocks per tick');
@@ -171,8 +205,13 @@ function placeNoteBlocks(noRecBPM){
                   //console.log('error = '+error);
             }
             //console.log(resolution+' bpqn chosen');
-            level.refresh();
-            drawLevel(true);
+            if(fileLoaded && !isNewFile){
+                  chkRefresh();
+            }
+            else{
+                  level.refresh();
+                  drawLevel(true);
+            }
 }
 
 function drawLevel(redrawMini,noDOM){
@@ -248,20 +287,26 @@ function nudgeY(){
       moveOffsetTo(null,(relativeOfs+48)/127);
 }
 
+function resetOffsets(){
+      ofsX = 0;
+      ofsY = 48;
+      document.getElementById('yofspicker').value = 0;
+}
+
 function bpmIDtoStr(id){
       switch(id){
-            case 0: return 'Walking';
-            case 1: return 'Running';
-            case 2: return 'Slow Autoscroll OR Backwards Normal Conveyor - Walking';
-            case 3: return 'Medium Autoscroll OR Backwards Fast Conveyor - Running';
-            case 4: return 'Fast Autoscroll';
-            case 5: return 'Normal Conveyor - Idle';
-            case 6: return 'Normal Conveyor - Walking OR Blue Skulls'
-            case 7: return 'Normal Conveyor - Running';
-            case 8: return 'Fast Conveyor - Idle';
+            case 0: return 'Slow Autoscroll OR Backwards Normal Conveyor - Walking';
+            case 1: return 'Normal Conveyor - Idle';
+            case 2: return 'Medium Autoscroll OR Backwards Fast Conveyor - Running';
+            case 3: return 'Walking';
+            case 4: return 'Fast Conveyor - Idle';
+            case 5: return 'Backwards Normal Conveyor - Running';
+            case 6: return 'Fast Autoscroll';
+            case 7: return 'Blue Skulls OR Normal Conveyor - Walking';
+            case 8: return 'Running';
             case 9: return 'Fast Conveyor - Walking';
-            case 10: return 'Fast Conveyor - Running';
-            case 11: return 'Backwards Normal Conveyor - Running';
+            case 10: return 'Normal Conveyor - Running';
+            case 11: return 'Fast Conveyor - Running';
       }
 }
 
@@ -278,7 +323,7 @@ function reccomendTempo(songBPM,res,print){
       }
       //console.log(bpmIDtoStr(recc));
       //console.log(songBPM+' -> '+bpms[recc]*(4/res));
-      if(print){setTempoText(bpmIDtoStr(recc)+' ('+Math.round(songBPM)+' bpm -> '+Math.round(bpms[recc]*(4/res))+' bpm)');}
+      if(print){document.getElementById('temposelect').selectedIndex = recc;}
       return bpms[recc]*(4/res);
 }
 
@@ -487,12 +532,30 @@ function handleOut(){
 function showEverything(){ // Bad code that was rushed and stuff
       document.getElementById('playbtn').style = 'float:left';
       document.getElementById('stopbtn').style = '';
-      document.getElementById('tempop').style = 'font-size:12px; display: inline';
       document.getElementById('fstxt').style = 'font-size:12px;  margin-bottom:0px;';
       document.getElementById('minimapcontainer').style = 'overflow: auto';
       document.getElementById('labrs').style = 'font-size:12px';
       document.getElementById('respicker').style = 'width:50px;';
       document.getElementById('labys').style = 'font-size:12px';
       document.getElementById('yofspicker').style = 'width:50px;';
-      document.getElementById('trkcontainer').style = 'border:1px solid black; width:100px; height: 100px; overflow-y: scroll';
+      document.getElementById('trkcontainer').style = 'border:1px solid black; width:220px; height: 100px; overflow-y: scroll';
+      document.getElementById('temposelect').style = '';
+}
+
+function refreshTempos(){
+      var i;
+      var sel = document.getElementById('temposelect');
+      sel.innerHTML = '';
+      for(i=0;i<bpms.length;i++){
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = bpmIDtoStr(i)+' ('+Math.round(bpms[i]*(4/resolution))+' bpm)';
+            sel.appendChild(opt);        
+      }
+}
+
+function selectTempo(){
+      var sel = document.getElementById('temposelect');
+      var selected = sel.selectedIndex;
+      bpm = bpms[selected]*(4/resolution)
 }

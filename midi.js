@@ -5,6 +5,8 @@ class MIDIfile{
             this.tpos = 0;
             this.runningStatus = null;
             this.tracks = []; // Each track is filled with an array of events
+            this.trkLabels = [];
+            this.hasNotes = [];
             this.error = 0;
             this.debug = 0;
             this.timingFormat = 0;
@@ -15,6 +17,8 @@ class MIDIfile{
             this.noteDelta = Array(16).fill(0);
             this.resolution = 1; // The smallest present unit of a note/rest is expressed as being 1/resolution quarter notes long.
             this.precision = 3;
+            this.isNewTrack = true;
+            this.currentLabel = 'Goomba'
             this.parse();
       }
 
@@ -23,9 +27,12 @@ class MIDIfile{
             //console.log('Started parsing');
             this.parseHeader();
             for(this.tpos=0;this.tpos<this.ntrks;this.tpos++){
+                  this.isNewTrack = true;
                   this.parseTrack();
+                  //console.log(this.tracks[this.tpos]);
             }
-            if(this.error!=0){alert('The file was parsed unsuccessfully.');}
+            console.log();
+            if(this.error!=0){alert('The file was parsed unsuccessfully. Check the browser console for details.');}
             //console.log(this.noteCount+' notes');
       }
       parseHeader(){
@@ -35,23 +42,22 @@ class MIDIfile{
                   this.error = 1;
                   return;
             }
-            if(this.parseBytes(4)!=6){
+            if(this.fetchBytes(4)!=6){
                   console.log('ERROR: File header is not 6 bytes long.');
                   this.error = 2;
                   return;
             }
-            this.fmt = this.parseBytes(2);
+            this.fmt = this.fetchBytes(2);
             if(this.fmt > 2){
                   console.log('ERROR: Unrecognized format number.');
                   this.error = 3;
             }
-            this.ntrks = this.parseBytes(2);
+            this.ntrks = this.fetchBytes(2);
             //console.log('Format '+this.fmt+', '+this.ntrks+' tracks');
 
             // Parse timing division
-            var tdiv = this.parseBytes(2);
-            var tdivstr = decToBin(tdiv,16);
-            if(tdivstr.charAt(0)=='0'){
+            var tdiv = this.fetchBytes(2);
+            if(!(tdiv >> 16)){
                   //console.log(tdiv+' ticks per quarter note');
                   this.timing = tdiv;
             }
@@ -70,7 +76,8 @@ class MIDIfile{
                   return;
             }
             this.tracks.push([]);
-            var len = this.parseBytes(4);
+            this.trkLabels.push('[Labeling Error]'); // Not intended to be seen in use
+            var len = this.fetchBytes(4);
             //console.log('len = '+len);
             while(!done){
                   done = this.parseEvent();
@@ -85,7 +92,7 @@ class MIDIfile{
       parseEvent(){
             var delta = this.parseDeltaTime();
             this.trackDuration += delta;
-            var statusByte = this.parseBytes(1)[0];
+            var statusByte = this.fetchBytes(1);
             var data = [];
             var rs = false;
             var EOT = false;
@@ -97,50 +104,49 @@ class MIDIfile{
             else{
                   this.runningStatus = statusByte;
             }
-            var bstring = decToBin(statusByte,8);
-            var eventType = binToDec(bstring.substring(0,4));
-            var channel = binToDec(bstring.substring(4,8));
-            if(eventType == 15){ // System events and meta events 
+            var eventType = statusByte >> 4;
+            var channel = statusByte & 0x0F;
+            if(eventType == 0xF){ // System events and meta events 
                   switch(channel){ // System message types are stored in the last nibble instead of a channel
                         // Don't really need these and probably nobody uses them but we'll keep them for completeness.
 
-                        case 0: // System exclusive message -- wait for exit sequence
+                        case 0x0: // System exclusive message -- wait for exit sequence
                               //console.log('sysex');
-                              var cbyte = this.parseBytes(1)[0];
+                              var cbyte = this.fetchBytes(1);
                               while(cbyte!=247){
                                     data.push(cbyte);
-                                    cbyte = this.parseBytes(1)[0];
+                                    cbyte = this.fetchBytes(1);
                               }
                         break;
 
-                        case 2:
-                              data.push(this.parseBytes(1)[0]);
-                              data.push(this.parseBytes(1)[0]);
+                        case 0x2:
+                              data.push(this.fetchBytes(1));
+                              data.push(this.fetchBytes(1));
                               break;
 
-                        case 3:
-                              data.push(this.parseBytes(1)[0]);
+                        case 0x3:
+                              data.push(this.fetchBytes(1));
                               break;
 
-                        case 15: // Meta events: where some actually important non-music stuff happens
-                              var metaType = this.parseBytes(1)[0];
+                        case 0xF: // Meta events: where some actually important non-music stuff happens
+                              var metaType = this.fetchBytes(1);
                               var i;
                               switch(metaType){
-                                    case 47: // End of track
+                                    case 0x2F: // End of track
                                           this.skip(1);
                                           EOT = true;
                                           //console.log('EOT');
                                           break;
 
-                                    case 81:
-                                          var len = this.parseBytes(1)[0];
-                                          data.push(this.parseBytes(len)); // All one value
+                                    case 0x51:
+                                          var len = this.fetchBytes(1);
+                                          data.push(this.fetchBytes(len)); // All one value
                                           break;
                                     default:
-                                          var len = this.parseBytes(1)[0];
+                                          var len = this.fetchBytes(1);
                                           //console.log('Mlen = '+len);
                                           for(i=0;i<len;i++){
-                                                data.push(this.parseBytes(1)[0]);
+                                                data.push(this.fetchBytes(1));
                                           }
                               }
                               eventType = getIntFromBytes([255,metaType]);
@@ -150,24 +156,37 @@ class MIDIfile{
             }
             else{
                   switch(eventType){
-                        case 12:
-                              if(!rs){data.push(this.parseBytes(1)[0]);}
+                        case 0x9:
+                              if(this.isNewTrack){ // Only properly label tracks with notes in them
+                                    this.trkLabels[this.tpos] = this.currentLabel+' '+this.getLabelNumber(this.currentLabel);
+                                    this.isNewTrack = false;                     
+                              }
+                              if(!rs){data.push(this.fetchBytes(1));}
+                              data.push(this.fetchBytes(1));
                               break;
-                        case 13:
-                              if(!rs){data.push(this.parseBytes(1)[0]);}
+                        case 0xC:
+                              if(!rs){data.push(this.fetchBytes(1));}
+                              //console.log(this.tpos+': '+data[0]);
+                              this.currentLabel = getInstrumentLabel(data[0]);
+                              break;
+                        case 0xD:
+                              if(!rs){data.push(this.fetchBytes(1));}
                               break;
                         default:
-                              if(!rs){data.push(this.parseBytes(1)[0]);}
-                              data.push(this.parseBytes(1)[0]);
+                              if(!rs){data.push(this.fetchBytes(1));}
+                              data.push(this.fetchBytes(1));
                   }
                   var i;
                   for(i=0;i<this.noteDelta.length;i++){
                         this.noteDelta[i] += delta;
                   }
-                  if(eventType==9 && data[1]!=0){
+                  if(eventType==0x9 && data[1]!=0){
+                        this.hasNotes[this.tpos] = true;
                         var resStuff = getThisRes(this.noteDelta[channel],this.timing);
                         var thisRes = resStuff.res;
                         if(thisRes > this.resolution){this.resolution = thisRes; this.precision = resStuff.prc;}
+                        // TODO: Drum kit
+                        // if(channel==10){console.log(data[0]);}
                         this.noteDelta[channel] = 0;
                         this.noteCount++;
                   }
@@ -181,14 +200,14 @@ class MIDIfile{
       }
 
       // Helper parsing functions
-      parseBytes(n){
+      fetchBytes(n){
             var i;
             var byteArr = [];
             for(i=0;i<n;i++){
                   byteArr[i] = this.bytes[this.ppos+i];
             }
             this.ppos += n;
-            if(n==1){return byteArr;}
+            if(n==1){return byteArr[0];}
             else{return getIntFromBytes(byteArr);}
       }
       parseString(n){
@@ -212,7 +231,7 @@ class MIDIfile{
                         this.debug = 1;
                         break;
                   }
-                  var byte = this.parseBytes(1)[0];
+                  var byte = this.fetchBytes(1);
                   if(byte<128){
                         reading = false;
                         arr.push(byte);
@@ -226,6 +245,21 @@ class MIDIfile{
       skip(n){
             this.ppos += n;
       }
+      getLabelNumber(label){ // Check for duplicates
+            var iteration = 0;
+            var pass = false;
+            while(!pass){
+                  iteration++;
+                  pass = true;
+                  var thisLabel = label+' '+iteration.toString();
+                  //console.log(thisLabel);
+                  var i = 0;
+                  for(i=0;i<this.trkLabels.length;i++){
+                        if(thisLabel == this.trkLabels[i]){pass = false;}
+                  }
+            }
+            return iteration;
+      }
 }
 
 class MIDIevent{
@@ -237,58 +271,72 @@ class MIDIevent{
       }
 }
 
+var recurse = 0;
+
 function ASCII(n){
       return String.fromCharCode(n);
 }
 
-function reverseBits(num){
-      var reverse_num = 0; 
-      var i; 
-      for (i = 0; i < 8; i++){ 
-            if((num & (1 << i))){reverse_num |= 1 << (7 - i);}
-      }
-      return reverse_num; 
-}
-
-function getIntFromBytes(arr,pad){ // Gets a signed integer value from an arbitrary number of bytes -- up to four
-      if(pad==undefined){pad=8;}
+function arrToASCII(arr){
+      var i;
       var str = '';
-      var i;
       for(i=0;i<arr.length;i++){
-            str += decToBin(arr[i],pad);
-      }
-      return binToDec(str);
-}
-
-function decToBin(n,padTo){
-      var str = (n >>> 0).toString(2);
-      if(padTo == undefined){return str;}
-      var i;
-      for(i=str.length;i<padTo;i++){
-            str = '0'+str;
+            str += ASCII(arr[i]);
       }
       return str;
 }
 
-function binToDec(str){
-      return parseInt(str,2);
+function getIntFromBytes(arr,pad){ // Gets an integer value from an arbitrary number of bytes
+      if(pad==undefined){pad=8;}
+      var n = 0;
+      var i;
+      for(i=0;i<arr.length;i++){
+            n = n << pad | arr[i]
+      }
+      return n;
 }
 
 function getThisRes(delta,qnTime){
+      recurse++;
       if(delta==0){return 1;}
       //console.log(delta/qnTime);
       var i;
       for(i=0;i<8;i++){
             var power = Math.pow(2,(7-i)-5);
             var quotient = (delta/qnTime)/power;
-            if(Math.floor(quotient)==quotient){
+            //console.log(quotient);
+            if(Math.floor(quotient)==quotient){ // Recursion until the quotient becomes a whole number
                   //console.log('Y '+(delta/qnTime)+' -> '+(1/power));
+                  recurse = 0;
                   return {res: (1/power), prc: i+1};
             }
+            if(recurse>20){return {res: 4, prc: 5};} // Give up
       }
       //console.log(delta+' / '+qnTime+' = '+(delta/qnTime)+' WEIRD');
       //console.log('Rounded to '+Math.round(quotient/resolution)*resolution);
+      // /console.log(recurse);
       return getThisRes(Math.round(quotient/resolution)*resolution,qnTime);
+}
+
+function getInstrumentLabel(program){ // Return a label name for the track based on the instrument
+      program++;
+      if(program<=8){return 'Goomba';} // Piano
+      if(program>=9 && program<=16){return 'Shellmet';} // Chromatic Percussion
+      if(program>=17 && program<=24){return '1-Up';} // Organ
+      if(program>=25 && program<=32){return 'Spike Top';} // Guitar
+      if(program>=33 && program<=40){return 'Sledge Bro';} // Bass
+      if(program>=41 && program<=48){return 'Piranha Plant';} // Strings
+      if(program>=49 && program<=56){return 'Bob-Omb';} // Ensemble
+      if(program>=57 && program<=72){return 'Spiny Shellmet';} // Brass, Lead
+      if(program>=73 && program<=80){return 'Dry Bones Shell';} // Pipe
+      if(program>=81 && program<=88){return 'Mushroom';} // Synth Lead
+      if(program>=89 && program<=96){return 'Rotton Mushroom';} // Synth Pad
+      if(program>=97 && program<=104){return 'Green No-Shell Koopa';} // Synth Effects
+      if(program>=105 && program<=112){return 'Monty Mole';} // Ethnic
+      if(program>=113 && program<=120){return 'P-Switch';} // Percussive
+      if(program>=121 && program<=128){return 'Red No-Shell Koopa';} // Sound Effects
+      
+      return 'Unintentional Goomba'; // You should not see this in regular use
 }
 
 // https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf
