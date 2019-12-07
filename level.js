@@ -46,7 +46,7 @@ class Level{
                   if(!this.areas[i].visible){continue;}
                   for(j=0;j<this.areas[i].w;j++){
                         for(k=0;k<this.areas[i].h;k++){
-                              var thisTile = this.areas[i].getTile(j,k);
+                              var thisTile = this.areas[i].getTile(j,k,true);
                               if(thisTile!=null){this.overview.setTile(j,k,thisTile);}
                         }
                   }
@@ -58,14 +58,14 @@ class Area{
       constructor(w,h){
             this.w = w;
             this.h = h;
-            this.ofsX = 0; // TODO: Use these to implement custom track offsets
+            this.ofsX = 0;
             this.ofsY = 0;
             this.visible = true;
             this.clear();
       }
       getTile(x,y,useOfs){
             if(!this.isInBounds(x,y)){return null;}
-            if(useOfs){return this.grid[x+ofsX][y+ofsY];}
+            if(useOfs){return this.grid[x+this.ofsX][y+this.ofsY];}
             else{return this.grid[x][y];}
       }
       isOccupied(x,y){

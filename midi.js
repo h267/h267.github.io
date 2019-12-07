@@ -1,9 +1,55 @@
+var currentInstrument = new Array(16).fill(0);
+var ppos = 0;
+var tpos = 0;
+var runningStatus = null;
+var trackDuration = 0;
+var noteDelta = Array(16).fill(0);
+var isNewTrack = true;
+var currentLabel = 'Goomba'
+var midiInstrumentNames = ['Acoustic Grand Piano', 'Bright Acoustic Piano', // Thank you to the person who already did this for me
+'Electric Grand Piano', 'Honky-tonk Piano',
+'Electric Piano 1', 'Electric Piano 2', 'Harpsichord',
+'Clavinet', 'Celesta', 'Glockenspiel', 'Music Box',
+'Vibraphone', 'Marimba', 'Xylophone', 'Tubular Bells',
+'Dulcimer', 'Drawbar Organ', 'Percussive Organ',
+'Rock Organ', 'Church Organ', 'Reed Organ', 'Accordion',
+'Harmonica', 'Tango Accordion', 'Acoustic Guitar (nylon)',
+'Acoustic Guitar (steel)', 'Electric Guitar (jazz)',
+'Electric Guitar (clean)', 'Electric Guitar (muted)',
+'Overdriven Guitar', 'Distortion Guitar',
+'Guitar Harmonics', 'Acoustic Bass',
+'Electric Bass (finger)', 'Electric Bass (pick)',
+'Fretless Bass', 'Slap Bass 1', 'Slap Bass 2',
+'Synth Bass 1', 'Synth Bass 2', 'Violin', 'Viola', 'Cello',
+'Contrabass', 'Tremolo Strings', 'Pizzicato Strings',
+'Orchestral Harp', 'Timpani', 'String Ensemble 1',
+'String Ensemble 2', 'Synth Strings 1', 'Synth Strings 2',
+'Choir Aahs', 'Voice Oohs', 'Synth Choir', 'Orchestra Hit',
+'Trumpet', 'Trombone', 'Tuba', 'Muted Trumpet',
+'French Horn', 'Brass Section', 'Synth Brass 1',
+'Synth Brass 2', 'Soprano Sax', 'Alto Sax', 'Tenor Sax',
+'Baritone Sax', 'Oboe', 'English Horn', 'Bassoon',
+'Clarinet', 'Piccolo', 'Flute', 'Recorder', 'Pan Flute',
+'Blown bottle', 'Shakuhachi', 'Whistle', 'Ocarina',
+'Lead 1 (square)', 'Lead 2 (sawtooth)',
+'Lead 3 (calliope)', 'Lead 4 chiff', 'Lead 5 (charang)',
+'Lead 6 (voice)', 'Lead 7 (fifths)',
+'Lead 8 (bass + lead)', 'Pad 1 (new age)', 'Pad 2 (warm)',
+'Pad 3 (polysynth)', 'Pad 4 (choir)', 'Pad 5 (bowed)',
+'Pad 6 (metallic)', 'Pad 7 (halo)', 'Pad 8 (sweep)',
+'FX 1 (rain)', 'FX 2 (soundtrack)', 'FX 3 (crystal)',
+'FX 4 (atmosphere)', 'FX 5 (brightness)', 'FX 6 (goblins)',
+'FX 7 (echoes)', 'FX 8 (sci-fi)', 'Sitar', 'Banjo',
+'Shamisen', 'Koto', 'Kalimba', 'Bagpipe', 'Fiddle',
+'Shanai', 'Tinkle Bell', 'Agogo', 'Steel Drums',
+'Woodblock', 'Taiko Drum', 'Melodic Tom', 'Synth Drum',
+'Reverse Cymbal', 'Guitar Fret Noise', 'Breath Noise',
+'Seashore', 'Bird Tweet', 'Telephone Ring', 'Helicopter',
+'Applause', 'Gunshot'];
+
 class MIDIfile{
       constructor(file){
             this.bytes = file;
-            this.ppos = 0;
-            this.tpos = 0;
-            this.runningStatus = null;
             this.tracks = []; // Each track is filled with an array of events
             this.trkLabels = [];
             this.hasNotes = [];
@@ -12,13 +58,21 @@ class MIDIfile{
             this.timingFormat = 0;
             this.timing = 0;
             this.duration = 0;
-            this.trackDuration = 0;
             this.noteCount = 0;
-            this.noteDelta = Array(16).fill(0);
             this.resolution = 1; // The smallest present unit of a note/rest is expressed as being 1/resolution quarter notes long.
             this.precision = 3;
-            this.isNewTrack = true;
-            this.currentLabel = 'Goomba'
+            this.usedInstruments = [];
+            this.notes;
+            this.firstBbar = 1;
+            this.firstTempo = 0;
+            currentInstrument = new Array(16).fill(0);
+            ppos = 0;
+            tpos = 0;
+            runningStatus = null;
+            trackDuration = 0;
+            noteDelta = Array(16).fill(0);
+            isNewTrack = true;
+            currentLabel = 'Goomba'
             this.parse();
       }
 
@@ -26,14 +80,18 @@ class MIDIfile{
       parse(){
             //console.log('Started parsing');
             this.parseHeader();
-            for(this.tpos=0;this.tpos<this.ntrks;this.tpos++){
-                  this.isNewTrack = true;
+            this.notes = new Array(this.ntrks);
+            for(tpos=0;tpos<this.ntrks;tpos++){
+                  isNewTrack = true;
+                  this.usedInstruments.push([]);
+                  this.usedInstruments[tpos].push();
                   this.parseTrack();
-                  //console.log(this.tracks[this.tpos]);
+                  //console.log(this.tracks[tpos]);
             }
-            console.log();
+            console.log(this);
             if(this.error!=0){alert('The file was parsed unsuccessfully. Check the browser console for details.');}
             //console.log(this.noteCount+' notes');
+            //console.log(this.notes);
       }
       parseHeader(){
             if(this.parseString(4) == 'MThd'){/*console.log('MThd');*/}
@@ -76,33 +134,34 @@ class MIDIfile{
                   return;
             }
             this.tracks.push([]);
-            this.trkLabels.push('[Labeling Error]'); // Not intended to be seen in use
+            this.notes[tpos] = [];
             var len = this.fetchBytes(4);
             //console.log('len = '+len);
             while(!done){
                   done = this.parseEvent();
             }
-            //console.log('Track '+this.tpos);
-            //console.log(this.tracks[this.tpos]);
-            //console.log(this.trackDuration);
-            if(this.trackDuration > this.duration){this.duration = this.trackDuration;}
-            this.trackDuration = 0;
-            this.noteDelta.fill(0);
+            this.trkLabels.push(this.labelCurrentTrack());
+            //console.log('Track '+tpos);
+            //console.log(this.tracks[tpos]);
+            //console.log(trackDuration);
+            if(trackDuration > this.duration){this.duration = trackDuration;}
+            trackDuration = 0;
+            noteDelta.fill(0);
       }
       parseEvent(){
             var delta = this.parseDeltaTime();
-            this.trackDuration += delta;
+            trackDuration += delta;
             var statusByte = this.fetchBytes(1);
             var data = [];
             var rs = false;
             var EOT = false;
             if(statusByte<128){ // Running status
                   data.push(statusByte);
-                  statusByte = this.runningStatus;
+                  statusByte = runningStatus;
                   rs = true;
             }
             else{
-                  this.runningStatus = statusByte;
+                  runningStatus = statusByte;
             }
             var eventType = statusByte >> 4;
             var channel = statusByte & 0x0F;
@@ -141,6 +200,14 @@ class MIDIfile{
                                     case 0x51:
                                           var len = this.fetchBytes(1);
                                           data.push(this.fetchBytes(len)); // All one value
+                                          if(this.firstTempo == 0){this.firstTempo = data[0];}
+                                          break;
+                                    case 0x58:
+                                          var len = this.fetchBytes(1);
+                                          for(i=0;i<len;i++){
+                                                data.push(this.fetchBytes(1));
+                                          }
+                                          if(this.firstBbar == 0){this.firstBbar = data[0]/Math.pow(2,data[1]);}
                                           break;
                                     default:
                                           var len = this.fetchBytes(1);
@@ -157,17 +224,19 @@ class MIDIfile{
             else{
                   switch(eventType){
                         case 0x9:
-                              if(this.isNewTrack){ // Only properly label tracks with notes in them
-                                    this.trkLabels[this.tpos] = this.currentLabel+' '+this.getLabelNumber(this.currentLabel);
-                                    this.isNewTrack = false;                     
-                              }
                               if(!rs){data.push(this.fetchBytes(1));}
                               data.push(this.fetchBytes(1));
+                              this.notes[tpos].push(new Note(trackDuration,data[0],data[1],currentInstrument[channel],channel));
+                              if(notInArr(this.usedInstruments[tpos],currentInstrument[channel])){this.usedInstruments[tpos].push(currentInstrument[channel]);}
                               break;
                         case 0xC:
                               if(!rs){data.push(this.fetchBytes(1));}
-                              //console.log(this.tpos+': '+data[0]);
-                              this.currentLabel = getInstrumentLabel(data[0]);
+                              //console.log(tpos+': '+data[0]);
+                              currentLabel = getInstrumentLabel(data[0]);
+                              // The last instrument on a channel ends where an instrument on the same channel begins
+                              //this.usedInstruments[tpos].push({ins: data[0], ch: channel, start: trackDuration});
+                              //if(notInArr(this.usedInstruments,data[0])){this.usedInstruments.push(data[0])} // Do this for now
+                              currentInstrument[channel] = data[0];
                               break;
                         case 0xD:
                               if(!rs){data.push(this.fetchBytes(1));}
@@ -177,21 +246,21 @@ class MIDIfile{
                               data.push(this.fetchBytes(1));
                   }
                   var i;
-                  for(i=0;i<this.noteDelta.length;i++){
-                        this.noteDelta[i] += delta;
+                  for(i=0;i<noteDelta.length;i++){
+                        noteDelta[i] += delta;
                   }
                   if(eventType==0x9 && data[1]!=0){
-                        this.hasNotes[this.tpos] = true;
-                        var resStuff = getThisRes(this.noteDelta[channel],this.timing);
+                        this.hasNotes[tpos] = true;
+                        var resStuff = getThisRes(noteDelta[channel],this.timing);
                         var thisRes = resStuff.res;
                         if(thisRes > this.resolution){this.resolution = thisRes; this.precision = resStuff.prc;}
                         // TODO: Drum kit
                         // if(channel==10){console.log(data[0]);}
-                        this.noteDelta[channel] = 0;
+                        noteDelta[channel] = 0;
                         this.noteCount++;
                   }
             }
-            this.tracks[this.tpos].push(new MIDIevent(delta,eventType,channel,data));
+            this.tracks[tpos].push(new MIDIevent(delta,eventType,channel,data));
             //console.log('+'+delta+': '+eventType+' @'+channel);
             //console.log(data);
             //this.debug++;
@@ -204,9 +273,9 @@ class MIDIfile{
             var i;
             var byteArr = [];
             for(i=0;i<n;i++){
-                  byteArr[i] = this.bytes[this.ppos+i];
+                  byteArr[i] = this.bytes[ppos+i];
             }
-            this.ppos += n;
+            ppos += n;
             if(n==1){return byteArr[0];}
             else{return getIntFromBytes(byteArr);}
       }
@@ -214,9 +283,9 @@ class MIDIfile{
             var i;
             var str = '';
             for(i=0;i<n;i++){
-                  str += ASCII(this.bytes[this.ppos+i]);
+                  str += ASCII(this.bytes[ppos+i]);
             }
-            this.ppos += n;
+            ppos += n;
             return str;
       }
       parseDeltaTime(){
@@ -227,7 +296,7 @@ class MIDIfile{
                   nbytes++;
                   if(nbytes>4){
                         console.log('Something is very wrong here.');
-                        console.log(this.tracks[this.tpos]);
+                        console.log(this.tracks[tpos]);
                         this.debug = 1;
                         break;
                   }
@@ -243,7 +312,17 @@ class MIDIfile{
             return getIntFromBytes(arr,7);
       }
       skip(n){
-            this.ppos += n;
+            ppos += n;
+      }
+      labelCurrentTrack(){
+            var labl = 'empty';
+            if(this.usedInstruments[tpos].length == 1){
+                  labl = getInstrumentLabel(this.usedInstruments[tpos][0]);
+            }
+            else if(this.usedInstruments[tpos].length > 1){
+                  labl = 'Mixed Track';
+            }
+            this.trkLabels[tpos] = labl+' '+this.getLabelNumber(labl);
       }
       getLabelNumber(label){ // Check for duplicates
             var iteration = 0;
@@ -268,6 +347,17 @@ class MIDIevent{
             this.type = type;
             this.channel = channel; // -1 means global event, such as meta or sysex
             this.data = data; // An array of the parameters
+      }
+}
+
+class Note{
+      constructor(time, pitch, volume, instrument, channel){
+            this.time = time;
+            this.pitch = pitch;
+            this.volume = volume;
+            this.originalInstrument = instrument;
+            this.instrument = instrument;
+            this.channel = channel;
       }
 }
 
@@ -330,13 +420,25 @@ function getInstrumentLabel(program){ // Return a label name for the track based
       if(program>=57 && program<=72){return 'Spiny Shellmet';} // Brass, Lead
       if(program>=73 && program<=80){return 'Dry Bones Shell';} // Pipe
       if(program>=81 && program<=88){return 'Mushroom';} // Synth Lead
-      if(program>=89 && program<=96){return 'Rotton Mushroom';} // Synth Pad
+      if(program>=89 && program<=96){return 'Rotten Mushroom';} // Synth Pad
       if(program>=97 && program<=104){return 'Green No-Shell Koopa';} // Synth Effects
       if(program>=105 && program<=112){return 'Monty Mole';} // Ethnic
       if(program>=113 && program<=120){return 'P-Switch';} // Percussive
       if(program>=121 && program<=128){return 'Red No-Shell Koopa';} // Sound Effects
       
       return 'Unintentional Goomba'; // You should not see this in regular use
+}
+
+function notInArr(arr,n){
+      var i;
+      for(i=0;i<arr.length;i++){
+            if(arr[i] == n){return false;}
+      }
+      return true;
+}
+
+function getMidiInstrumentName(n){
+      return midiInstrumentNames[n];
 }
 
 // https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf
