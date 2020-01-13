@@ -665,6 +665,7 @@ function changeRes(){ // TODO: Change the resolution slider to a proper blocks p
       //if(ratio>1){ratio = ratio-Math.floor(ratio);}
       //console.log(ratio+'... '+ofsX+' -> '+(ofsX*ratio));
       resolution = newRes;
+      console.log(resolution);
       //console.log('chose res of '+resolution);
       //document.getElementById('trkcontainer').innerHTML = '';
       hardRefresh(true);
