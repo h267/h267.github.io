@@ -4,18 +4,22 @@ class Level{
             if(this.areas == undefined){this.areas = [];}
             this.setDims();
             this.overview = new Area(this.width,this.height);
+            this.isTrackOccupant = new Array(this.width);
+            this.numberOfOccupants = new Array(this.width);
             this.refresh;
       }
       checkTile(x,y){
-            /*var i;
+            return this.overview.getTile(x,y,true);
+      }
+      getTileOccupants(x,y){
+            var i;
             var occupants = [];
             for(i=0;i<this.areas.length;i++){
-                  if(!this.areas[i].visible){continue;}
-                  var thisTile = this.areas[i].getTile(x,y);
+                  if(!this.areas[i].isVisible){continue;}
+                  var thisTile = this.areas[i].getTile(x,y,true);
                   if(thisTile!=null){occupants.push(thisTile);}
             }
-            return occupants;*/
-            return this.overview.getTile(x,y);
+            return occupants;
       }
       setDims(){
             var max = {w: 0, h: 0};
@@ -39,15 +43,29 @@ class Level{
       }
       refresh(){
             this.overview = new Area(this.width,this.height);
+            this.isTrackOccupant = new Array(this.width);
+            this.numberOfOccupants = new Array(this.width);
             var i;
             var j;
+            for(i=0;i<this.width;i++){
+                  this.isTrackOccupant[i] = new Array(this.height);
+                  this.numberOfOccupants[i] = new Array(this.height);
+                  for(j=0;j<this.height;j++){
+                        this.isTrackOccupant[i][j] = new Array(this.areas.length).fill(false);
+                        this.numberOfOccupants[i][j] = 0;
+                  }
+            }
             var k;
             for(i=0;i<this.areas.length;i++){
-                  if(!this.areas[i].visible){continue;}
+                  if(!this.areas[i].isVisible){continue;}
                   for(j=0;j<this.areas[i].w;j++){
                         for(k=0;k<this.areas[i].h;k++){
                               var thisTile = this.areas[i].getTile(j,k,true);
-                              if(thisTile!=null){this.overview.setTile(j,k,thisTile);}
+                              if(thisTile!=null){
+                                    this.overview.setTile(j,k,thisTile);
+                                    this.isTrackOccupant[j][k][i] = true;
+                                    this.numberOfOccupants[j][k]++;
+                              }
                         }
                   }
             }
@@ -60,12 +78,12 @@ class Area{
             this.h = h;
             this.ofsX = 0;
             this.ofsY = 0;
-            this.visible = true;
+            this.isVisible = true;
             this.clear();
       }
       getTile(x,y,useOfs){
             if(!this.isInBounds(x,y)){return null;}
-            if(useOfs){return this.grid[x+this.ofsX][y+this.ofsY];}
+            if(useOfs){return this.grid[x+this.ofsX][y-this.ofsY];}
             else{return this.grid[x][y];}
       }
       isOccupied(x,y){
@@ -84,17 +102,13 @@ class Area{
       }
       clear(){
             var i;
-            var j;
             this.grid = [];
             for(i=0;i<this.w;i++){
-                  this.grid[i] = [];
-                  for(j=0;j<this.h;j++){
-                        this.grid[i][j] = null;
-                  }
+                  this.grid[i] = new Array(this.h).fill(null);
             }
       }
       setVisibility(v){
-            this.visible = v;
+            this.isVisible = v;
       }
       isInBounds(x,y){
             return x < this.w + this.ofsX && x >= this.ofsX && y < this.h + this.ofsY && y >= this.ofsY;

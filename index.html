@@ -9,66 +9,95 @@
           </script>
           <title>Super Mario Maestro</title>
           <link rel="stylesheet" href="style.css">
-          <meta name="description" content="A web-based music level generator tool for Super Mario Maker 2 using MIDI files.">
           <meta charset="utf-8"/>          
      </head>
-     <body style="background-color:white;">
-          <!-- <p style='text-align: center; font-size:24px; margin-bottom: 5px;'>Super Mario Maestro v1.1</p> -->
+     <body>
           <div style="width:100%">
                <div style="display: table;margin: 0 auto;">
-                    <img src="icon/logo.png" alt="Maestro Logo" style="height:35px; margin-bottom: 5px;"></img>
-                    <p style="float:right; position: relative; left: 5px; top: 7px;">v1.2</p>
+                    <img src="icon/logo.png" alt="Maestro Logo" class="logo"></img>
+                    <p style="float:right; position: relative; left: 5px; top: 7px;">v1.3</p>
                </div>
           </div>
-
           <div style="width: 95%; margin: 0 auto">
-               <div id="displaycontainer" style="overflow:auto;">
+               <div id="displaycontainer" class="dispcontainer" style="margin-bottom: 2px;">
                     <canvas id="canvas" width="3840" height="432"></canvas>
                </div>
-               <div id="toolbox" style="display: none;">
-                    <button id="playbtn" type="button" onclick="playBtn()" style="float:left;">Play</button>
-                    <button id="stopbtn" type="button" onclick="stopBtn()">Stop</button>
-                    <select id="temposelect" onchange="selectTempo()">
-                         <!-- To be populated with tempo options -->
-                    </select>
-                    <p id="ELtext" style='display: inline;'>Entities in Area: 0</p>
-                    <p id="PLtext" style='display: inline; position: relative; left: 20px'>Powerups in Area: 0</p>
-                    <p id="fstxt" style='margin-bottom:0px;'>File Scrubber</p>
-                    <div id="minimapcontainer" style="overflow:auto;">
-                         <canvas id="minimap" width="100px" height="64" style="border:1px solid black"></canvas>
+               <div id="toolbox" style="display: none; height: 24px;">
+                    <div class="smallspacedcontainer">
+                         <div>
+                              <button id="playbtn" class="button" type="button" onclick="playBtn()" style="margin-right: 4px;">Play</button><button id="stopbtn" class="button" type="button" onclick="stopBtn()">Stop</button>
+                         </div>
+                         <select id="temposelect" class="dropdown" onchange="selectTempo()">
+                              <optgroup id="comtempos" label="Common Tempos">
+
+                              </optgroup>
+                              <optgroup id="alltempos" label="All Tempos">
+
+                              </optgroup>
+                              <!-- To be populated with tempo options -->
+                         </select>
+                         <div class="controlcontainer spacedcontainer" style="height: 24px; margin-bottom: 0px">
+                              <p id="ELtext" class="displaytext">Entities in Area: 0</p>
+                              <p id="PLtext" class="displaytext">Powerups in Area: 0</p>
+                              <p id="QEtext" class="displaytext">BPB Quality: -</p>
+                              <p id="NCtext" class="displaytext">Spatial Conflicts: -</p>
+                         </div>
                     </div>
-                    <div style="display: grid; grid-template-columns: auto auto;">
-                         <div id="lefttools" style="float:left">
-                              <label for="respicker" id="labrs">Resolution</label>
-                              <input id="respicker" type="number" name="respicker" value="0" min = "1" max = "8" onchange="changeRes()" style="width:50px;" min="-48" max="54" disabled>
+                    <p id="tempotext" style="position: relative; left: 130px; top: 2px; font-size: 10px; height: 0px; width: max-content; margin-top: 0px; margin-bottom: 0px;">Original: -</p>
+                    <p id="fstxt" style='margin-bottom:0px;'>File Scrubber</p>
+                    <div id="minimapcontainer" class="dispcontainer" style="margin-bottom: 4px; background-color: #195180;">
+                         <canvas id="minimap" width="100px" height="64"></canvas>
+                    </div>
+                    <div class="controlcontainer spacedcontainer">
+                         <div>
                               <label for="yofspicker" id="labys">Vertical Shift</label>
                               <input id="yofspicker" type="number" name="yofspicker" value="0" onchange="nudgeY()" style="width:50px;" min="-48" max="54" disabled>
+                         </div>
+                         <div id="noisecontrol">
                               <label for="noiseslider" id="nslabl">Noise Threshold</label>
-                              <input id="noiseslider" type="range" min="0" max="127" value="0" onchange="changeNoiseThreshold()" style='display: none; position: relative; top: 5px;'>
-                              <div class="container" id="trkcontainer" style="border:1px solid black; width:220px; height: 150px; overflow-y: auto;">
+                              <input id="noiseslider" type="range" min="0" max="127" value="0" onchange="changeNoiseThreshold()" style='position: relative; top: 5px;'>
+                         </div>
+                         <div>
+                              <label for="bpbpicker" id="labrs">Blocks per Beat</label>
+                              <input id="bpbpicker" type="number" name="bpbpicker" value="0" min = "1" max = "8" oninput="pickBPB()" style="width:50px;" min="1" max="16" disabled>
+                         </div>
+                         <!--<button id="bpbrecommend" class="button" type="button" disabled="true" onclick="changeToRecommendedBPB()">Recommend BPB</button>-->
+                    </div>
+                    <div style="display: flex;">
+                         <div id="lefttools">
+                              <div class="controlcontainer" id="trkcontainer" style="border:3px solid steelblue; width:220px; height: 160px; overflow-y: auto; margin-right: 4px;">
                                    <!-- To be populated with track checkboxes -->
                               </div>
                          </div>
-                         <div id="righttools">
-                              <p style='font-size: 15px; margin-top: 4px; margin-bottom: 8px;'>Track Settings:</p>
+                         <div id="righttools" class="controlcontainer" style="width: 600px; height: 160px;">
+                              <p style='font-size: 15px; margin-top: 4px; margin-bottom: 8px; font-weight: bold;'>Track Settings:</p>
                               <label for="octaveshift">Octave Shift</label>
                               <input id="octaveshift" type="number" min="-10" max="10" value="0" style="width: 50px;" onchange="shiftTrackOctave()">
-                              <div id="instrumentcontainer" style="width: 400px; height: 150px; overflow-y: auto;">
+                              <div id="semishiftdiv" style="display: inline;">
+                                   <label for="semitoneshift">Semitones</label>
+                                   <input id="semitoneshift" type="number" min="-11" max="11" value="0" style="width: 50px;" onchange="shiftTrackOctave()">
+                              </div>
+                              <div class="spacedcontainer">
+                                   <p class="displaytext" id="NASText" style="padding-right: 12px;">Notes above screen: 0</p>
+                                   <p class="displaytext" id="NBSText">Notes below screen: 0</p>
+                                   <button id="shiftbutton" class="button" onclick="shiftTrackIntoView()">Shift into View</button>
+                              </div>
+                              <div id="instrumentcontainer">
                                    <!-- To be populated with track instrument changes -->
                               </div>
                          </div>
                     </div>
+                    <div>
+                         <input id="advbox" type="checkbox" onchange="toggleAdvancedMode()"></input>
+                         <label for="advbox" style="position: relative; bottom: 3px; right: 4px;">Advanced Settings</label>
+                    </div>
                </div>
-               <p id="filetext" style="float:left">MIDI File:</p>
+               <p id="filetext" class="displaytext" style="float:left; margin-top: 17px;">MIDI File:</p>
                <input id ="fileinput" type="file" onchange="loadFile()" style="margin-top:5px; margin-left:5px"></input>
-               <div style="position: absolute; bottom: 1em; right: 1em; text-align: right; margin-bottom: 0px;">
-                    <a href="https://discord.gg/KhmXzfp" style="font-size: 12px;font-family: Arial, Helvetica, sans-serif;">
-                         Discord Server
-                         <img src="https://external-content.duckduckgo.com/ip3/discordapp.com.ico" height=14px></img>
-                    </a>
-                    <p style="margin-top: 0px;margin-bottom: 0px;">made by h267</p>
+               <div style="position: absolute; bottom: 1em; right: 1em;">
+                    <button id="discordbutton" class="discordbutton" onClick="handleDiscordPress();"></button>
+                    <p style="text-align: right; margin-bottom: 0px; font-style: italic;">made by h267</p>
                </div>
-               
           </div>
 
           <script src="./lib/Tone.js"></script> 

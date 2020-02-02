@@ -2,226 +2,230 @@ var schTime = 0;
 var pos = 0;
 var len = 0;
 var notes = [];
+var framesPerColumn = 0;
 
 // Load all of the instruments in a very neat and concise way
 // (Why does it have to be this way Tone.js)
 // TODO: Come back to this please
-var goomba = new Tone.Sampler({'F#3': './wav/goomba.wav'},function(){
+// The octave of each instrument is listed as the same so the playback will match in-game playback
+// (some instruments sound lower than others at the same y value)
+var goomba = new Tone.Sampler({'F3': './wav/goomba.wav'},function(){
+//var goomba = new Tone.Sampler({'F3': './wav/sine.wav'},function(){
       goomba.toMaster();
       goomba.volume.value = -5;
       goomba.curve = 'linear';
 });
-var shellmet = new Tone.Sampler({'F#3': './wav/shellmet.wav'},function(){
+var shellmet = new Tone.Sampler({'F3': './wav/shellmet.wav'},function(){
       shellmet.toMaster();
       shellmet.volume.value = -5;
       shellmet.curve = 'linear';
 });
-var up = new Tone.Sampler({'F#3': './wav/1up.wav'},function(){
+var up = new Tone.Sampler({'F3': './wav/1up.wav'},function(){
       up.toMaster();
       up.volume.value = -5;
       up.curve = 'linear';
 });
-var spiketop = new Tone.Sampler({'F#3': './wav/spiketop.wav'},function(){
+var spiketop = new Tone.Sampler({'F3': './wav/spiketop.wav'},function(){
       spiketop.toMaster();
       spiketop.volume.value = -5;
       spiketop.curve = 'linear';
 });
-var sledgebro = new Tone.Sampler({'F#3': './wav/sledgebro.wav'},function(){
+var sledgebro = new Tone.Sampler({'F3': './wav/sledgebro.wav'},function(){
       sledgebro.toMaster();
       sledgebro.volume.value = -5;
       sledgebro.curve = 'linear';
 });
-var piranha = new Tone.Sampler({'F#3': './wav/piranha.wav'},function(){
+var piranha = new Tone.Sampler({'F3': './wav/piranha.wav'},function(){
       piranha.toMaster();
       piranha.volume.value = -5;
       piranha.curve = 'linear';
 });
-var bobomb = new Tone.Sampler({'F#3': './wav/bobomb.wav'},function(){
+var bobomb = new Tone.Sampler({'F3': './wav/bobomb.wav'},function(){
       bobomb.toMaster();
       bobomb.volume.value = -5;
       bobomb.curve = 'linear';
 });
-var spikedshellmet = new Tone.Sampler({'F#3': './wav/spikedshellmet.wav'},function(){
+var spikedshellmet = new Tone.Sampler({'F3': './wav/spikedshellmet.wav'},function(){
       spikedshellmet.toMaster();
       spikedshellmet.volume.value = -5;
       spikedshellmet.curve = 'linear';
 });
-var drybones = new Tone.Sampler({'F#3': './wav/drybones.wav'},function(){
+var drybones = new Tone.Sampler({'F3': './wav/drybones.wav'},function(){
       drybones.toMaster();
       drybones.volume.value = -5;
       drybones.curve = 'linear';
 });
-var shroom = new Tone.Sampler({'F#3': './wav/shroom.wav'},function(){
+var shroom = new Tone.Sampler({'F3': './wav/shroom.wav'},function(){
       shroom.toMaster();
       shroom.volume.value = -5;
       shroom.curve = 'linear';
 });
-var rottenshroom = new Tone.Sampler({'F#3': './wav/rottenshroom.wav'},function(){
+var rottenshroom = new Tone.Sampler({'F3': './wav/rottenshroom.wav'},function(){
       rottenshroom.toMaster();
       rottenshroom.volume.value = -5;
       rottenshroom.curve = 'linear';
 });
-var bark = new Tone.Sampler({'F#3': './wav/bark.wav'},function(){
+var bark = new Tone.Sampler({'F3': './wav/bark.wav'},function(){
       bark.toMaster();
       bark.volume.value = -5;
       bark.curve = 'linear';
 });
-var mole = new Tone.Sampler({'F#3': './wav/mole.wav'},function(){
+var mole = new Tone.Sampler({'F3': './wav/mole.wav'},function(){
       mole.toMaster();
       mole.volume.value = -5;
       mole.curve = 'linear';
 });
-var pswitch = new Tone.Sampler({'F#3': './wav/pswitch.wav'},function(){
+var pswitch = new Tone.Sampler({'F3': './wav/pswitch.wav'},function(){
       pswitch.toMaster();
       pswitch.volume.value = -5;
       pswitch.curve = 'linear';
 });
-var zuls = new Tone.Sampler({'F#3': './wav/zuls.wav'},function(){
+var zuls = new Tone.Sampler({'F3': './wav/zuls.wav'},function(){
       zuls.toMaster();
       zuls.volume.value = -5;
       zuls.curve = 'linear';
 });
-var bigshroom = new Tone.Sampler({'F#3': './wav/bigshroom.wav'},function(){
+var bigshroom = new Tone.Sampler({'F3': './wav/bigshroom.wav'},function(){
       bigshroom.toMaster();
       bigshroom.volume.value = -5;
       bigshroom.curve = 'linear';
 });
-var blaster = new Tone.Sampler({'F#3': './wav/blaster.wav'},function(){
+var blaster = new Tone.Sampler({'F3': './wav/blaster.wav'},function(){
       blaster.toMaster();
       blaster.volume.value = -5;
       blaster.curve = 'linear';
 });
-var boot = new Tone.Sampler({'F#3': './wav/boot.wav'},function(){
+var boot = new Tone.Sampler({'F3': './wav/boot.wav'},function(){
       boot.toMaster();
       boot.volume.value = -5;
       boot.curve = 'linear';
 });
-var stiletto = new Tone.Sampler({'F#3': './wav/stiletto.wav'},function(){
+var stiletto = new Tone.Sampler({'F3': './wav/stiletto.wav'},function(){
       stiletto.toMaster();
       stiletto.volume.value = -5;
       stiletto.curve = 'linear';
 });
-var cannon = new Tone.Sampler({'F#3': './wav/cannon.wav'},function(){
+var cannon = new Tone.Sampler({'F3': './wav/cannon.wav'},function(){
       cannon.toMaster();
       cannon.volume.value = -5;
       cannon.curve = 'linear';
 });
-var chomp = new Tone.Sampler({'F#3': './wav/chomp.wav'},function(){
+var chomp = new Tone.Sampler({'F3': './wav/chomp.wav'},function(){
       chomp.toMaster();
       chomp.volume.value = -5;
       chomp.curve = 'linear';
 });
-var post = new Tone.Sampler({'F#3': './wav/post.wav'},function(){
+var post = new Tone.Sampler({'F3': './wav/post.wav'},function(){
       post.toMaster();
       post.volume.value = -5;
       post.curve = 'linear';
 });
-var coin = new Tone.Sampler({'F#3': './wav/coin.wav'},function(){
+var coin = new Tone.Sampler({'F3': './wav/coin.wav'},function(){
       coin.toMaster();
       coin.volume.value = -5;
       coin.curve = 'linear';
 });
-var fireplant = new Tone.Sampler({'F#3': './wav/fireplant.wav'},function(){
+var fireplant = new Tone.Sampler({'F3': './wav/fireplant.wav'},function(){
       fireplant.toMaster();
       fireplant.volume.value = -5;
       fireplant.curve = 'linear';
 });
-var flower = new Tone.Sampler({'F#3': './wav/flower.wav'},function(){
+var flower = new Tone.Sampler({'F3': './wav/flower.wav'},function(){
       flower.toMaster();
       flower.volume.value = -5;
       flower.curve = 'linear';
 });
-var goombrat = new Tone.Sampler({'F#3': './wav/goombrat.wav'},function(){
+var goombrat = new Tone.Sampler({'F3': './wav/goombrat.wav'},function(){
       goombrat.toMaster();
       goombrat.volume.value = -5;
       goombrat.curve = 'linear';
 });
-var greenkoopa = new Tone.Sampler({'F#3': './wav/greenkoopa.wav'},function(){
+var greenkoopa = new Tone.Sampler({'F3': './wav/greenkoopa.wav'},function(){
       greenkoopa.toMaster();
       greenkoopa.volume.value = -5;
       greenkoopa.curve = 'linear';
 });
-var redkoopa = new Tone.Sampler({'F#3': './wav/redkoopa.wav'},function(){
+var redkoopa = new Tone.Sampler({'F3': './wav/redkoopa.wav'},function(){
       redkoopa.toMaster();
       redkoopa.volume.value = -5;
       redkoopa.curve = 'linear';
 });
-var hammerbro = new Tone.Sampler({'F#3': './wav/hammerbro.wav'},function(){
+var hammerbro = new Tone.Sampler({'F3': './wav/hammerbro.wav'},function(){
       hammerbro.toMaster();
       hammerbro.volume.value = -5;
       hammerbro.curve = 'linear';
 });
-var magikoopa = new Tone.Sampler({'F#3': './wav/magikoopa.wav'},function(){
+var magikoopa = new Tone.Sampler({'F3': './wav/magikoopa.wav'},function(){
       magikoopa.toMaster();
       magikoopa.volume.value = -5;
       magikoopa.curve = 'linear';
 });
-var muncher = new Tone.Sampler({'F#3': './wav/muncher.wav'},function(){
+var muncher = new Tone.Sampler({'F3': './wav/muncher.wav'},function(){
       muncher.toMaster();
       muncher.volume.value = -5;
       muncher.curve = 'linear';
 });
-var pow = new Tone.Sampler({'F#3': './wav/pow.wav'},function(){
+var pow = new Tone.Sampler({'F3': './wav/pow.wav'},function(){
       pow.toMaster();
       pow.volume.value = -5;
       pow.curve = 'linear';
 });
-var spring = new Tone.Sampler({'F#3': './wav/spring.wav'},function(){
+var spring = new Tone.Sampler({'F3': './wav/spring.wav'},function(){
       spring.toMaster();
       spring.volume.value = -5;
       spring.curve = 'linear';
 });
-var sidespring = new Tone.Sampler({'F#3': './wav/sidespring.wav'},function(){
+var sidespring = new Tone.Sampler({'F3': './wav/sidespring.wav'},function(){
       sidespring.toMaster();
       sidespring.volume.value = -5;
       sidespring.curve = 'linear';
 });
-var star = new Tone.Sampler({'F#3': './wav/star.wav'},function(){
+var star = new Tone.Sampler({'F3': './wav/star.wav'},function(){
       star.toMaster();
       star.volume.value = -5;
       star.curve = 'linear';
 });
-var superball = new Tone.Sampler({'F#3': './wav/superball.wav'},function(){
+var superball = new Tone.Sampler({'F3': './wav/superball.wav'},function(){
       superball.toMaster();
       superball.volume.value = -5;
       superball.curve = 'linear';
 });
-var thwomp = new Tone.Sampler({'F#3': './wav/thwomp.wav'},function(){
+var thwomp = new Tone.Sampler({'F3': './wav/thwomp.wav'},function(){
       thwomp.toMaster();
       thwomp.volume.value = -5;
       thwomp.curve = 'linear';
 });
-var wiggler = new Tone.Sampler({'F#3': './wav/wiggler.wav'},function(){
+var wiggler = new Tone.Sampler({'F3': './wav/wiggler.wav'},function(){
       wiggler.toMaster();
       wiggler.volume.value = -5;
       wiggler.curve = 'linear';
 });
-var spike = new Tone.Sampler({'F#3': './wav/spike.wav'},function(){
+var spike = new Tone.Sampler({'F3': './wav/spike.wav'},function(){
       spike.toMaster();
-      spike.volume.value = -5;
+      spike.volume.value = -7;
       spike.curve = 'linear';
 });
-var spikeball = new Tone.Sampler({'F#3': './wav/spikeball.wav'},function(){
+var spikeball = new Tone.Sampler({'F3': './wav/spikeball.wav'},function(){
       spikeball.toMaster();
       spikeball.volume.value = -5;
       spikeball.curve = 'linear';
 });
-var snowball = new Tone.Sampler({'F#3': './wav/snowball.wav'},function(){
+var snowball = new Tone.Sampler({'F3': './wav/snowball.wav'},function(){
       snowball.toMaster();
       snowball.volume.value = -5;
       snowball.curve = 'linear';
 });
-var pokey = new Tone.Sampler({'F#3': './wav/pokey.wav'},function(){
+var pokey = new Tone.Sampler({'F3': './wav/pokey.wav'},function(){
       pokey.toMaster();
       pokey.volume.value = -5;
       pokey.curve = 'linear';
 });
-var snowpokey = new Tone.Sampler({'F#3': './wav/snowpokey.wav'},function(){
+var snowpokey = new Tone.Sampler({'F3': './wav/snowpokey.wav'},function(){
       snowpokey.toMaster();
       snowpokey.volume.value = -5;
       snowpokey.curve = 'linear';
 });
-var sword = new Tone.Sampler({'F#3': './wav/sword.wav'},function(){
+var sword = new Tone.Sampler({'F3': './wav/sword.wav'},function(){
       sword.toMaster();
       sword.volume.value = -5;
       sword.curve = 'linear';
@@ -233,22 +237,36 @@ var toad = new Tone.Sampler({'C4': './wav/toad.wav'},function(){
 });
 
 
-Tone.Transport.PPQ = 128;
+Tone.Transport.PPQ = 2520;
 
-function playLvl(level,bpm,resolution,ofsX,ofsY){
+function playLvl(level,bpm,blocksPerBeat,ofsX,ofsY,playConflicts){
+      if(playConflicts == undefined){playConflicts = true;}
       stopAudio();
+      framesPerColumn = 1/(blocksPerBeat*bpm/3600);
       var i;
       var j;
-      for(i=ofsX;i<ofsX+240-27;/*i<level.width;*/i++){
+      for(i=ofsX;i<ofsX+240-27;i++){
+      //for(i=ofsX;i<i<level.width;i++){
             if(i>=level.width){break;} // Plays extra music otherwise. Probably should come back to this
             notes.push([]);
-            for(j=ofsY+1;j<ofsY+27;/*j=0;j<level.height;*/j++){
+            for(j=ofsY+1;j<ofsY+27;j++){
+            //for(j=0;j<level.height;j++){
                   if(j>=level.height || j<0){continue;}
-                  if(level.checkTile(i,j) == 1){
-                        addNote((j-ofsY)+48,level.checkTile(i,j+1)-2);
+                  if(!playConflicts){
+                        if(level.checkTile(i,j) == 1){
+                              addNote((j-ofsY)+47,level.checkTile(i,j+1)-2);
+                        }
+                  }
+                  else{
+                        for(var k=0;k<level.areas.length;k++){
+                              if(!level.areas[k].isVisible){continue;}
+                              if(level.areas[k].getTile(i,j,true) == 1){
+                                    addNote((j-ofsY)+47,level.areas[k].getTile(i,j+1,true)-2);
+                              }    
+                        }
                   }
             }
-            advanceSchTime(128/resolution);
+            advanceSchTime(2520/blocksPerBeat);
       }
       //console.log(notes);
       playAudio(bpm);
@@ -270,6 +288,14 @@ function stopAudio(){
       notes = [];
 }
 
+function resetPlayback(){
+      enableMouse();
+      document.getElementById('playbtn').disabled = false;
+      clearDisplayLayer(dlayer.mouseLayer);
+      scrollDisplayTo(0);
+      refreshCanvas();
+}
+
 function addNote(note,instrument){
       notes[pos].push({note:note, instrument:instrument});
       //console.log('Scheduled '+note+' at '+schTime);
@@ -280,19 +306,24 @@ function advanceSchTime(delta){
       Tone.Transport.schedule(function(time){
             //console.log('p '+pos);
             //console.log(notes);
+            /*if(pos==0){
+                  //smoothScrollCont(framesPerColumn, duration);
+                  smoothScrollCont(framesPerColumn);
+            }*/
             var curNotes = notes[pos];
             //if(notes.length!=0){console.log(curNotes);}
             //if(curNotes.length>0){console.log('ye');}
-            drawLevel(false,true);
+            clearDisplayLayer(dlayer.mouseLayer);
             highlightCol(pos+27,'rgba(255,0,0,0.5)');
-            playNotes(curNotes);
-            if(pos+27==239){
-                  drawLevel(false,true);
-                  enableMouse();
+            scrollDisplayTo(pos*16);
+            refreshCanvas();
+            if(curNotes != undefined){playNotes(curNotes);} // Prevent weird crash
+            if(pos >= Math.min(239-27,level.width)-1){
+                  resetPlayback();
             }
             //console.log(time);
             pos++;
-      }, schTime.toString()+'i');
+      }, Math.round(schTime).toString()+'i');
       /*Tone.Draw.schedule(function(time){
             //highlightTile(pos+27,0);
             //highlightTile(Math.floor((240-27)*(time/Tone.Ticks(schTime).toSeconds()))+27,0);
@@ -371,5 +402,4 @@ function playNotes(curNotes){
                   case 44: toad.triggerAttackRelease(noteNumToStr(curNotes[i].note),'4n'); break;
             }
       }
-      
 }
