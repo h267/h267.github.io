@@ -6,7 +6,8 @@ var trackDuration = 0;
 var noteDelta = Array(16).fill(0);
 var isNewTrack = true;
 var currentLabel = 'Goomba';
-var midiInstrumentNames = ['Acoustic Grand Piano', 'Bright Acoustic Piano', // Thank you to the person who already did this for me
+
+const midiInstrumentNames = ['Acoustic Grand Piano', 'Bright Acoustic Piano', // Thank you to the person who already did this for me
 'Electric Grand Piano', 'Honky-tonk Piano',
 'Electric Piano 1', 'Electric Piano 2', 'Harpsichord',
 'Clavinet', 'Celesta', 'Glockenspiel', 'Music Box',
@@ -47,9 +48,17 @@ var midiInstrumentNames = ['Acoustic Grand Piano', 'Bright Acoustic Piano', // T
 'Seashore', 'Bird Tweet', 'Telephone Ring', 'Helicopter',
 'Applause', 'Gunshot'];
 
+/**
+ * A container that holds MIDI data parsed from a MIDI file.
+ */
 class MIDIfile{
-      constructor(file){
-            this.bytes = file;
+      /**
+       * Initializes the MIDIfile object.
+       * @param {Uint8Array} bytes An array of 8-bit unsigned bytes that express the MIDI data.
+       * @constructor
+       */
+      constructor(bytes){
+            this.bytes = bytes;
             this.trks = null;
             this.error = null;
             this.debug = 0;
@@ -74,6 +83,10 @@ class MIDIfile{
       }
 
       // Main parsing functions
+
+      /**
+       * Parses the loaded MIDI data.
+       */
       parse(){
             //console.log('Started parsing');
             this.parseHeader();
@@ -112,8 +125,12 @@ class MIDIfile{
             //console.log(this.noteCount+' notes');
             //console.log('MIDI data loaded in '+((new Date).getTime() - t0)+' ms');
       }
+
+      /**
+       * Parses the MIDI header, which determines the number of tracks and timing in the MIDI file.
+       */
       parseHeader(){
-            if(this.parseString(4) == 'MThd'){/*console.log('MThd');*/}
+            if(this.fetchString(4) == 'MThd'){/*console.log('MThd');*/}
             else{
                   console.log('ERROR: No MThd');
                   this.error = {code: 1, pos: ppos, msg: 'No MIDI header detected.'};
@@ -145,9 +162,13 @@ class MIDIfile{
                   return;
             }
       }
+
+      /**
+       * Parses a single MIDI track, which contains all of the events for one MIDI track.
+       */
       parseTrack(){
             var done = false;
-            if(this.parseString(4) != 'MTrk'){
+            if(this.fetchString(4) != 'MTrk'){
                   console.log('ERROR: No MTrk');
                   this.error = {code: 4, pos: ppos, msg: 'Failed to find MIDI track.'};
                   return;
@@ -166,6 +187,10 @@ class MIDIfile{
             trackDuration = 0;
             noteDelta.fill(0);
       }
+
+      /**
+       * Parses a MIDI event and puts the data in a MIDIevent object.
+       */
       parseEvent(){
             var addr = ppos;
             var delta = this.parseDeltaTime();
@@ -247,11 +272,11 @@ class MIDIfile{
                               if(!rs){data.push(this.fetchBytes(1));}
                               data.push(this.fetchBytes(1));
                               if(data[1] == 0){break;}
-                              //var ins;
-                              var ins = currentInstrument[channel]; // Patch out percussion splitting
+                              var ins;
+                              //var ins = currentInstrument[channel]; // Patch out percussion splitting TODO: Patch back in, in a new way
                               if(channel == 9){
                                     this.trks[tpos].hasPercussion = true;
-                                    //ins = data[0];
+                                    ins = data[0];
                               }
                               else{
                                     ins = currentInstrument[channel];
@@ -260,7 +285,7 @@ class MIDIfile{
                               if(data[0] < this.trks[tpos].lowestNote && !this.trks[tpos].hasPercussion || this.trks[tpos].lowestNote == null){this.trks[tpos].lowestNote = data[0];}
                               if(data[0] > this.trks[tpos].highestNote && !this.trks[tpos].hasPercussion){this.trks[tpos].highestNote = data[0];}
                               this.trks[tpos].notes.push(note);
-                              if(notInArr(this.trks[tpos].usedInstruments,ins)){
+                              if(isNotInArr(this.trks[tpos].usedInstruments,ins)){
                                     this.trks[tpos].usedInstruments.push(ins);
                               }
                               break;
@@ -284,11 +309,10 @@ class MIDIfile{
                         noteDelta[i] += delta;
                   }
                   if(eventType==0x9 && data[1]!=0){
-                        var bpbStuff = getThisBPB(noteDelta[channel],this.timing);
                     
                         // console.log(bpbStuff);
                         for(i=1;i<=16;i++){
-                              var x = i*noteDelta[channel]/this.timing; // TODO: Better algorithm needed?
+                              var x = i*noteDelta[channel]/this.timing;
                               var roundX = Math.round(x);
                               // console.log("Rounded by: " + roundX-x);
                               this.trks[tpos].quantizeErrors[i-1] += Math.round(Math.abs((roundX-x)/i)*100);
@@ -306,6 +330,12 @@ class MIDIfile{
       }
 
       // Helper parsing functions
+
+      /**
+       * Gets the integer from retrieving a specified number of bytes from the MIDI data stream and advances the read position.
+       * @param {number} n The number of bytes to retrieve from the MIDI data stream.
+       * @returns {number} An integer value corresponding to the retrieved bytes.
+       */
       fetchBytes(n){
             var i;
             var byteArr = [];
@@ -316,7 +346,13 @@ class MIDIfile{
             if(n==1){return byteArr[0];}
             else{return getIntFromBytes(byteArr);}
       }
-      parseString(n){
+
+      /**
+       * Gets the string from retrieving a specified number of bytes from the MIDI data stream and advances the read position.
+       * @param {number} n The number of bytes to retrieve and convert to a string from the MIDI data stream.
+       * @returns {string} The string created by the retrieved bytes.
+       */
+      fetchString(n){
             var i;
             var str = '';
             for(i=0;i<n;i++){
@@ -325,6 +361,11 @@ class MIDIfile{
             ppos += n;
             return str;
       }
+
+      /**
+       * Parses a delta time value in a MIDI event.
+       * @returns {number} The parsed delta time value.
+       */
       parseDeltaTime(){
             var reading = true;
             var arr = [];
@@ -348,9 +389,18 @@ class MIDIfile{
             }
             return getIntFromBytes(arr,7);
       }
+
+      /**
+       * Makes the parser position skip a number of bytes.
+       * @param {number} n The number of bytes to skip parsing.
+       */
       skip(n){
             ppos += n;
       }
+
+      /**
+       * Generates a label for the current MIDI track.
+       */
       labelCurrentTrack(){
             var labl = 'empty';
             if(this.trks[tpos].usedInstruments.length == 1){
@@ -366,6 +416,12 @@ class MIDIfile{
             }
             this.trks[tpos].label = labl+' '+this.getLabelNumber(labl);
       }
+
+      /**
+       * Finds the number of duplicate track labels from a specified label.
+       * @param {string} label The label to check for duplicates.
+       * @returns {number} The number of duplicates plus one.
+       */
       getLabelNumber(label){ // Check for duplicates
             var iteration = 0;
             var pass = false;
@@ -383,7 +439,19 @@ class MIDIfile{
       }
 }
 
+/**
+ * A single MIDI event.
+ */
 class MIDIevent{
+      /**
+       * Initializes the MIDIevent object.
+       * @param {number} deltaTime The number of ticks elapsed before this event.
+       * @param {number} type The type of MIDI event.
+       * @param {number} channel Which MIDI channel this event occurs on.
+       * @param {number} data An array of parameters for this event.
+       * @param {number} address The position of this event in the MIDI file.
+       * @constructor
+       */
       constructor(deltaTime, type, channel, data, address){
             this.deltaTime = deltaTime;
             this.type = type;
@@ -393,7 +461,14 @@ class MIDIevent{
       }
 }
 
+/**
+ * A single MIDI track, which holds a number of MIDI events.
+ */
 class MIDItrack{
+      /**
+       * Initializes the MIDItrack object.
+       * @constructor
+       */
       constructor(){
             this.events = [];
             this.label = '';
@@ -406,7 +481,19 @@ class MIDItrack{
       }
 }
 
+/**
+ * A music note.
+ */
 class Note{
+      /**
+       * Initializes the Note object.
+       * @param time The absolute time, in ticks, at which this note plays.
+       * @param pitch The MIDI note number of this note.
+       * @param volume The velocity of this note, from 0 to 127.
+       * @param instrument The MIDI instrument number of this note.
+       * @param channel Which MIDI channel this instrument plays on.
+       * @constructor
+       */
       constructor(time, pitch, volume, instrument, channel){
             this.time = time;
             this.pitch = pitch;
@@ -417,26 +504,34 @@ class Note{
             this.channel = channel;
       }
 }
+
+/**
+ * Creates a copy of a note.
+ * @param {Note} note The note to be cloned.
+ * @returns {Note} A copy of the note.
+ */
 function cloneNote(note){
       var newNote = new Note(note.time, note.pitch, note.volume, note.instrument, note.channel);
       newNote.originalInstrument = note.originalInstrument;
       return newNote;
 }
 
+/**
+ * Gets the character corresponding to an ASCII value.
+ * @param {number} n The ASCII index to get a character from.
+ * @returns {string} The character corresponding to the ASCII index.
+ */
 function ASCII(n){
       return String.fromCharCode(n);
 }
 
-function arrToASCII(arr){
-      var i;
-      var str = '';
-      for(i=0;i<arr.length;i++){
-            str += ASCII(arr[i]);
-      }
-      return str;
-}
-
-function getIntFromBytes(arr,pad){ // Gets an integer value from an arbitrary number of bytes
+/**
+ * Gets an integer value from an arbitrary number of bytes.
+ * @param {number[]} arr An array of bytes.
+ * @param {number} pad The amount of padding applied.
+ * @returns {number} The integer value obtained from the bytes.
+ */
+function getIntFromBytes(arr,pad){
       if(pad==undefined){pad=8;}
       var n = 0;
       var i;
@@ -446,24 +541,12 @@ function getIntFromBytes(arr,pad){ // Gets an integer value from an arbitrary nu
       return n;
 }
 
-function getThisBPB(delta,qnTime){
-      if(delta==0){return 1;}
-      //console.log(delta/qnTime);
-      var i;
-      for(i=1;i<=16;i++){
-            var quotient = i*delta/qnTime;
-            //console.log(quotient);
-            if(Math.floor(quotient)==quotient){ // Recursion until the quotient becomes a whole number
-                  //console.log('Y '+(delta/qnTime)+' -> '+i);
-                  return {bpb: i, prc: i+1};
-            }
-      }
-      //console.log(delta+' / '+qnTime+' = '+(delta/qnTime)+' WEIRD');
-      //console.log('Rounded to '+Math.round(quotient/blocksPerBeat)*blocksPerBeat);
-      return {bpb: 4, prc: 0}; // Give up
-}
-
-function getInstrumentLabel(program){ // Return a label name for the track based on the instrument
+/**
+ * Gets the name for a MIDI instrument.
+ * @param program The MIDI instrument number.
+ * @returns {string} The name of the instrument.
+ */
+function getInstrumentLabel(program){ // Return a label name for the track based on the instrument // TODO: Can probably use the data in maestro.js for this
       program++;
       if(program<=8){return 'Goomba';} // Piano
       if(program>=9 && program<=16){return 'Shellmet';} // Chromatic Percussion
@@ -484,7 +567,13 @@ function getInstrumentLabel(program){ // Return a label name for the track based
       return 'Unintentional Goomba'; // You should not see this in regular use
 }
 
-function notInArr(arr,n){
+/**
+ * Tests for whether or not a value is in an array.
+ * @param {any[]} arr The array to search through.
+ * @param {any} n The value to check for.
+ * @returns If the value is present in the array.
+ */
+function isNotInArr(arr,n){
       var i;
       for(i=0;i<arr.length;i++){
             if(arr[i] == n){return false;}
@@ -492,8 +581,13 @@ function notInArr(arr,n){
       return true;
 }
 
-function getMidiInstrumentName(n){
-      return midiInstrumentNames[n];
+/**
+ * Gets the MIDI instrument name from at an index.
+ * @param {number} index The MIDI instrument number to get the name of.
+ * @returns {string} The name of the specified instrument.
+ */
+function getMidiInstrumentName(index){
+      return midiInstrumentNames[index];
 }
 
 // https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf
