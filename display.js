@@ -320,6 +320,7 @@ function getRealMiniOfs(e){
       }
       var canvasOfs = getOffset(e);
       var div = document.getElementById('minimapcontainer');
+      if(aprilFools) canvasOfs.x = Math.floor(div.clientWidth - canvasOfs.x);5
       var scrollOfs = {x: div.scrollLeft, y: div.scrollTop};
       var offset = {x: canvasOfs.x + scrollOfs.x, y: canvasOfs.y + scrollOfs.y};
       return offset;
