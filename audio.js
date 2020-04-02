@@ -288,7 +288,7 @@ function applyReleaseEnvelope(bufferData, hasLongSustain){
       let multiplier;
       let releasePos;
       /*if(hasLongSustain) releasePos = LONG_RELEASE_POS;
-      else */releasePos = RELEASE_POS;
+      else*/ releasePos = RELEASE_POS;
       for(let i = releasePos; i < bufferData.length; i++){
             multiplier = 1.0 - ((i - releasePos) / RELEASE_DURATION);
             bufferData[i] *= Math.max(multiplier, 0);

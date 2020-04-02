@@ -1,10 +1,5 @@
-// Super Mario Maestro v1.3.1 (April 1st Build)
+// Super Mario Maestro v1.3.1
 // made by h267
-
-// TODO:
-// - "Turn off April Fool's" button, moves to a random position
-// - Invert the mouse coords
-// - Something else...
 
 /* TODO: New features:
 
@@ -32,14 +27,10 @@ const contPlayback = false; // Dev toggle for full map playback
 const numParts = 20;
 const autoShowRatio = 0.7;
 
-const exampleOfs = 6;
-
 var reader = new FileReader();
 var numCommonTempos = 0;
 var midi;
 var mapWidth;
-var isExample = false;
-var aprilFools = true;
 
 /**
  * Data on the various scroll speeds in Mario Maker 2. Tempos are stored in their 4 block per beat equivalents.
@@ -191,9 +182,6 @@ loadBuffers().then(() => {
  * Loads a MIDI file from the file input.
  */
 function loadFileFromInput(){
-      isExample = false;
-      document.getElementById('player').style.display = 'none';
-      document.getElementById('canvas').style.display = '';
       let fname = document.getElementById('fileinput').files[0].name;
       if(fname.substring(fname.length-8,fname.length).toLowerCase()=='.mp3.mid'){ // Detect MP3 MIDIs
             document.getElementById('noisecontrol').style.display = '';
@@ -209,7 +197,6 @@ function loadFileFromInput(){
  * Loads the example MIDI file.
  */
 function loadExample(){
-      isExample = true;
       document.getElementById("fileinput").value = "";
       let request = new XMLHttpRequest();
       request.open("GET", "./example.mid", true);
@@ -263,10 +250,6 @@ function loadData(bytes){ // Load file from the file input element
       document.getElementById('octaveshift').value = 0;
       document.getElementById('semitoneshift').value = 0;
       blocksPerBeat = midi.blocksPerBeat;
-      if(isExample){
-            ofsY -= exampleOfs;
-            document.getElementById('yofspicker').value = exampleOfs;
-      }
       reccBPB = blocksPerBeat;
       lastBPB = blocksPerBeat;
       document.getElementById('bpbpicker').value = blocksPerBeat;
@@ -857,19 +840,11 @@ function changeBPB(){
  * Triggers level playback.
  */
 function playBtn(){
-      if(fileLoaded && (!isExample || !aprilFools)){
+      if(fileLoaded){
             disableMouse();
             document.getElementById('playbtn').disabled = true;
             if(contPlayback) playMap(midi,level,bpm,blocksPerBeat,ofsX,ofsY);
             else playLvl(midi,level,bpm,blocksPerBeat,ofsX,ofsY);
-      }
-      else{
-            if(videoReady){
-                  document.getElementById('player').style.display = '';
-                  document.getElementById('canvas').style.display = 'none';
-                  player.seekTo(7, true);
-                  player.playVideo();
-            }
       }
 }
 
@@ -877,10 +852,6 @@ function playBtn(){
  * Stops level playback.
  */
 function cancelPlayback(){
-      if(isExample && aprilFools){
-            player.pauseVideo();
-            return;
-      }
       if(!isPlaying) return;
       isAnimating = false;
       resetPlayback();
@@ -1688,16 +1659,4 @@ function setPlaybackWaitStatus(status){
             document.getElementById('stopbtn').innerHTML = "Stop";
             document.getElementById('stopbtn').disabled = false;
       }
-}
-
-function turnOffAprilFools(){
-      aprilFools = false;
-      document.getElementById('allcontrols').style.transform = '';
-      document.getElementById('tutorialbutton').style.transform = '';
-      document.getElementById('examplebutton').style.transform = '';
-      document.getElementById('tutorialbutton').innerHTML = "Tutorial by Loup&Snoop";
-      document.getElementById('tutorialbutton').setAttribute('onclick', 'tutorialBtn()');
-      document.getElementById('player').style.display = 'none';
-      document.getElementById('canvas').style.display = '';
-      player.stopVideo();
 }

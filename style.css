@@ -192,10 +192,6 @@ select::-moz-focus-inner{
       animation-fill-mode: both;
 }
 
-.bigdiv{
-      transition: transform 500ms;
-}
-
 @keyframes buttonpress{
       0%{
             box-shadow: #1a5586 0px 3px;
