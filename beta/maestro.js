@@ -1674,6 +1674,7 @@ function setPlaybackWaitStatus(status){
 }
 
 function debugLog(str) {
+      if (!debugFlag) return;
       document.getElementById('debugarea').value += `${str}\n`;
       console.log(`${str} -> log`);
 }

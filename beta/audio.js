@@ -15,6 +15,8 @@ const LOAD_DELAY = 0.5;
 
 const LOAD_SIZE = 0.5;
 
+let debugFlag = true;
+
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 window.OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
 
@@ -273,14 +275,21 @@ async function renderBufferAtPlaybackRate(buffer, rate){
       let offlineCtx = new window.OfflineAudioContext(1, Math.ceil(newDuration * SAMPLE_RATE), SAMPLE_RATE);
       debugLog('octx');
       debugLog(offlineCtx);
+      debugLog('buff');
+      debugLog(buffer);
 
       var source = offlineCtx.createBufferSource();
       source.buffer = buffer;
       source.playbackRate.value = rate;
+      debugLog('buffsrc');
+      debugLog(source);
       source.connect(offlineCtx.destination);
       source.start();
 
       let renderedBuffer = await offlineCtx.startRendering();
+      debugLog('buff2');
+      debugLog(renderedBuffer);
+      debugFlag = false;
       return renderedBuffer;
 }
 
