@@ -183,6 +183,8 @@ class Instrument {
             let that = this;
             return new Promise(async function(resolve, reject){
                   let buffer = await renderBufferAtPlaybackRate(that.buffer, midiNoteToFreq(note)/midiNoteToFreq(that.baseNote));
+                  // debugLog(JSON.stringify(buffer));
+                  debugLog(buffer);
                   let bufferData = buffer.getChannelData(0);
                   applyReleaseEnvelope(bufferData, that.hasLongSustain);
                   that.noteBuffers[note.toString()] = buffer;

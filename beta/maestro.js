@@ -160,6 +160,8 @@ var hasLoadedBuffers = false;
 
 //getEquivalentBlocks(2.75);
 
+debugLog('- Debug Log -');
+
 // Load graphics and draw the initial state of the level
 document.getElementById('canvas').addEventListener ('mouseout', handleOut, false);
 getImg('icon/ruler.png').then(async function(cursorImg){
@@ -1673,4 +1675,5 @@ function setPlaybackWaitStatus(status){
 
 function debugLog(str) {
       document.getElementById('debugarea').value += `${str}\n`;
+      console.log(`${str} -> log`);
 }
