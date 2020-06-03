@@ -170,6 +170,7 @@ getImg('icon/ruler.png').then(async function(cursorImg){
       drawLevel(false,true);
 });
 
+try{
 loadBuffers().then(() => {
       hasLoadedBuffers = true;
       document.getElementById('stopbtn').innerHTML = 'Stop';
@@ -177,6 +178,10 @@ loadBuffers().then(() => {
       document.getElementById('playbtn').innerHTML = 'Play';
       document.getElementById('playbtn').disabled = false;
 });
+}
+catch(e){
+      debugLog(e.toString());
+}
 
 /**
  * Loads a MIDI file from the file input.
@@ -841,10 +846,15 @@ function changeBPB(){
  */
 function playBtn(){
       if(fileLoaded){
+            try{
             disableMouse();
             document.getElementById('playbtn').disabled = true;
             if(contPlayback) playMap(midi,level,bpm,blocksPerBeat,ofsX,ofsY);
             else playLvl(midi,level,bpm,blocksPerBeat,ofsX,ofsY);
+            }
+            catch(e){
+                  debugLog(e.toString());
+            }
       }
 }
 
