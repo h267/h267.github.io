@@ -15,6 +15,9 @@ const LOAD_DELAY = 0.5;
 
 const LOAD_SIZE = 0.5;
 
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+window.OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+
 var audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // jshint ignore:line
 
 /**
