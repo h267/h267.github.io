@@ -183,8 +183,6 @@ class Instrument {
             let that = this;
             return new Promise(async function(resolve, reject){
                   let buffer = await renderBufferAtPlaybackRate(that.buffer, midiNoteToFreq(note)/midiNoteToFreq(that.baseNote));
-                  // debugLog(JSON.stringify(buffer));
-                  debugLog(buffer);
                   let bufferData = buffer.getChannelData(0);
                   applyReleaseEnvelope(bufferData, that.hasLongSustain);
                   that.noteBuffers[note.toString()] = buffer;
@@ -273,7 +271,7 @@ function midiNoteToFreq(note){
 async function renderBufferAtPlaybackRate(buffer, rate){
       let newDuration = buffer.duration / rate;
       let offlineCtx = new window.OfflineAudioContext(1, Math.ceil(newDuration * SAMPLE_RATE), SAMPLE_RATE);
-      debugLog(offlineCtx);
+      debugLog(`octx: ${offlineCtx}`);
 
       var source = offlineCtx.createBufferSource();
       source.buffer = buffer;
