@@ -1660,3 +1660,7 @@ function setPlaybackWaitStatus(status){
             document.getElementById('stopbtn').disabled = false;
       }
 }
+
+function debugLog(str) {
+      document.getElementById('debugarea').value += `${str}\n`;
+}

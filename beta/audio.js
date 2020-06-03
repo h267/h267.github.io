@@ -116,6 +116,7 @@ class NoteSchedule {
        * @returns {Promise<AudioBuffer>} A Promise holding the rendered audio buffer.
        */
       async render(){
+            try {
             let offlineCtx = new window.OfflineAudioContext(1,Math.ceil((this.ticksToSeconds(this.schedule[this.schedule.length - 1].ticks) + 2) * SAMPLE_RATE), SAMPLE_RATE);
             this.renderingCtx = offlineCtx;
             let that = this;
@@ -128,6 +129,10 @@ class NoteSchedule {
             });
 
             let renderedBuffer = await offlineCtx.startRendering();
+            }
+            catch(e) {
+                  debugLog(e.toString());
+            }
             return renderedBuffer;
       }
 
@@ -182,11 +187,16 @@ class Instrument {
       generateBufferForNote(note){
             let that = this;
             return new Promise(async function(resolve, reject){
+                  try{
                   let buffer = await renderBufferAtPlaybackRate(that.buffer, midiNoteToFreq(note)/midiNoteToFreq(that.baseNote));
                   let bufferData = buffer.getChannelData(0);
                   applyReleaseEnvelope(bufferData, that.hasLongSustain);
                   that.noteBuffers[note.toString()] = buffer;
                   resolve();
+                  }
+                  catch(e) {
+                        debugLog(e.toString());
+                  }
             });
       }
 
