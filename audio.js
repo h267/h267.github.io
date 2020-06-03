@@ -113,8 +113,7 @@ class NoteSchedule {
        * @returns {Promise<AudioBuffer>} A Promise holding the rendered audio buffer.
        */
       async render(){
-            let offlineCtx = (new OfflineAudioContext(1, Math.ceil((this.ticksToSeconds(this.schedule[this.schedule.length-1].ticks) + 2) * SAMPLE_RATE), SAMPLE_RATE)
-            || new window.webkitOfflineAudioContext(1, Math.ceil((this.ticksToSeconds(this.schedule[this.schedule.length-1].ticks) + 2) * SAMPLE_RATE), SAMPLE_RATE));
+            let offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1,Math.ceil((this.ticksToSeconds(this.schedule[this.schedule.length - 1].ticks) + 2) * SAMPLE_RATE), SAMPLE_RATE);
             this.renderingCtx = offlineCtx;
             let that = this;
 
@@ -268,8 +267,7 @@ function midiNoteToFreq(note){
  */
 async function renderBufferAtPlaybackRate(buffer, rate){
       let newDuration = buffer.duration / rate;
-      let offlineCtx = (new OfflineAudioContext(1, Math.ceil(newDuration * SAMPLE_RATE), SAMPLE_RATE)
-      || new window.webkitOfflineAudioContext(1, Math.ceil(newDuration * SAMPLE_RATE), SAMPLE_RATE));
+      let offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, Math.ceil(newDuration * SAMPLE_RATE), SAMPLE_RATE);
 
       var source = offlineCtx.createBufferSource();
       source.buffer = buffer;
