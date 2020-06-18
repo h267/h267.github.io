@@ -112,12 +112,14 @@ function loadData(bytes) { // Load file from the file input element
 		}
 		tracks[i].isHidden = false;
 	}
+	setIsBuildMode(false);
 	refreshBlocks();
 	updateUI(false, true);
 	secondaryTrack = getFirstVisibleTrack();
 	updateTrackList();
 	togglePercussion();
 	toggleEditTools();
+	updateBuildButtons();
 	isNewFile = false;
 	document.getElementById('tempotext').innerHTML = `Original: ${Math.round(songBPM)} bpm`;
 	document.getElementById('advanceSettings').checked = usingAdvSettings;
@@ -1019,12 +1021,14 @@ function updateOutOfBoundsNoteCounts() {
 	let nbsText = document.getElementById('noteBelowScreenText');
 	let denom = tracks[selectedTrack].notes.length;
 	let nasPercent = Math.round((tracks[selectedTrack].numNotesOffscreen.above * 100) / denom);
+	if (Number.isNaN(nasPercent)) nasPercent = 0;
 	nasText.innerHTML = `Notes above screen: ${nasPercent}%`;
 	if (nasPercent === 0) nasText.style.color = 'lime';
 	else if (nasPercent <= 15) nasText.style.color = 'limegreen';
 	else if (nasPercent <= 30) nasText.style.color = 'orange';
 	else nasText.style.color = 'tomato';
 	let nbsPercent = Math.round((tracks[selectedTrack].numNotesOffscreen.below * 100) / denom);
+	if (Number.isNaN(nbsPercent)) nbsPercent = 0;
 	nbsText.innerHTML = `Notes below screen: ${nbsPercent}%`;
 	if (nbsPercent === 0) nbsText.style.color = 'lime';
 	else if (nbsPercent <= 15) nbsText.style.color = 'limegreen';
@@ -1676,7 +1680,23 @@ function findNote(track, time, pitch, doRound = true) { // TODO: Prevent time pr
 
 function toggleBuildMode() {
 	setIsBuildMode(!isBuildMode);
+	updateBuildButtons();
 	softRefresh(false, true);
+}
+
+function updateBuildButtons() {
+	let buildBtn = document.getElementById('buildBtn');
+	let ncText = document.getElementById('NCtext');
+	if (isBuildMode) {
+		buildBtn.setAttribute('class', '');
+		buildBtn.innerHTML = 'Normal View';
+		ncText.style.display = '';
+	} else {
+		buildBtn.setAttribute('class', 'btn-green');
+		buildBtn.innerHTML = 'Auto-Build (Beta)';
+		ncText.style.display = 'none';
+	}
+	refreshMouseToolbar();
 }
 
 function setIsBuildMode(isEnabled) {
