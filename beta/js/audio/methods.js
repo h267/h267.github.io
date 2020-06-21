@@ -45,6 +45,29 @@ function playBuffer(buffer, time = 0, duration, ctx = audioCtx) {
 	return source;
 }
 
+function playBufferAtPlaybackRate(buffer, time = 0, rate, sustainTime, duration, ctx = audioCtx) {
+	// Release note at the end of the duration or at the normal time, whichever is sooner
+	let releaseTime = Math.min(time + duration, time + sustainTime);
+	let endTime = releaseTime + (RELEASE_DURATION / 44100);
+
+	let source = ctx.createBufferSource();
+	source.buffer = buffer;
+	source.playbackRate.value = rate;
+
+	let gainNode = ctx.createGain();
+	gainNode.gain.value = MASTER_VOLUME;
+	gainNode.gain.linearRampToValueAtTime(MASTER_VOLUME, releaseTime);
+	gainNode.gain.linearRampToValueAtTime(0, endTime);
+
+	source.connect(gainNode);
+	gainNode.connect(ctx.destination);
+
+	// if (Number.isNaN(duration) || duration === 0) source.start(time); // Play polyphonic notes
+	// else source.start(time, 0);
+	source.start(time, 0);
+	return source;
+}
+
 /**
  * Converts a MIDI note to a frequency in Hertz.
  * @param {number} note The MIDI note number.
