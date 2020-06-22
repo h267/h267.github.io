@@ -336,7 +336,7 @@ function drawLevel(redrawMini = false, noDOM = false) {
 				}
 				// Outline note blocks of the selected track
 				if (tile === 1 && level.isTrackOccupant[i][j][selectedTrack] && !isBuildMode) {
-					outlineTile(drawX, drawY, 2, 'rgb(44, 153, 121)');
+					outlineTile(drawX, drawY, 2, 'rgb(15, 135, 104)');
 				}
 			}
 			if (fgTile !== null) drawTile(bgs[2 + fgTile], drawX * 16, drawY * 16);
@@ -978,7 +978,8 @@ function updateInstrumentContainer() { // TODO: Refactor grouping code
 		let labl = document.createElement('label');
 		labl.id = `inspickerlabl${i}`;
 		labl.for = `inspicker${i}`;
-		labl.innerHTML = `${getMidiInstrumentName(midi.trks[selectedTrack].usedInstruments[i])} ➞ `;
+		if (tracks[selectedTrack].isFromUser) labl.innerHTML = 'Instrument ➞ ';
+		else labl.innerHTML = `${getMidiInstrumentName(midi.trks[selectedTrack].usedInstruments[i])} ➞ `;
 		div.appendChild(labl);
 		div.appendChild(picker);
 		if (hasOctaveRec) {
@@ -1719,12 +1720,7 @@ function createNewTrack() {
 	newTrk.lowestNote = null;
 	newTrk.isFromUser = true;
 
-	let labl;
-	if (newTrk.hasPercussion) {
-		labl = 'Percussion';
-	} else {
-		labl = getInstrumentLabel(newTrk.usedInstruments[0]);
-	}
+	let labl = 'New Track';
 	newTrk.label = `${labl} ${midi.getLabelNumber(labl)}`;
 
 	addTrack(newTrk);
