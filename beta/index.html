@@ -1,234 +1,26 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <title>Music Level Maestro</title>
-    <meta charset="utf-8"/>
-    <link rel="shortcut icon" href="favicon.ico">
-
-    <link rel="stylesheet" href="css/generalStyle.css">
-    <link rel="stylesheet" href="css/containers.css">
-    <link rel="stylesheet" href="css/buttons.css">
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152821049-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'UA-152821049-1');
-    </script>
-</head>
-<body>
-<div id="topContainer">
-    <div id="logoContainer">
-        <div id="imgContainer">
-            <img src="icon/logo.png" alt="Maestro Logo">
-        </div>
-        <div id="maestroTextContainer">
-            <p>v1.4.0 Release Candidate 3</p>
-            <p>Made by h267</p>
-        </div>
-        <button id="discordBtn" onClick="handleDiscordPress();"></button>
-    </div>
-</div>
-<div id="mainContainer">
-    <div id="subMainContainer">
-        <div id="displayContainer" class="dispcontainer">
-            <canvas id="canvas" width="3840" height="432"></canvas>
-        </div>
-    </div>
-
-    <div id="toolboxContainer" hidden>
-        <div class="smallspacedcontainer">
-            <div>
-                <button id="playBtn" type="button" onclick="playBtn()" disabled>. . .</button>
-                <button id="stopBtn" type="button" onclick="cancelPlayback()" disabled>. . .</button>
-            </div>
-            <div id="outsideToolbarContainer">
-                <div id="toolbarContainer">
-                    <!-- To be populated with buttons -->
-                </div>
-                <button id="undoBtn" onclick="undoManager.undo()">
-                    <img id="undoImg" src="icon/undo.png"></img>
-                </button>
-            </div>
-            <button id="buildBtn" class="btn-green" type="button" onclick="toggleBuildMode()">Auto-Build (Beta)</button>
-        </div>
-        
-        <p id="fstxt">File Scrubber</p>
-        <div id="minimapcontainer" class="dispcontainer">
-            <canvas id="minimap" width="100px" height="64"></canvas>
-        </div>
-        <div id="toolsContainer">
-            <div id="levelSettings" class="controlcontainer">
-                <label id="blockPerBeatLabel" for="blockPerBeat">Blocks per Beat</label>
-                <input id="blockPerBeat" type="number" name="blockPerBeat" value="0" min="1" max="8" onchange="pickBPB()">
-                <label id="pushbackLimitLabel" for="pushbackLimit">Auto-Build Pushback Limit</label>
-                <input id="pushbackLimit" type="number" name="pushbackLimit" value="10" min="0" onchange="setPushback()">
-                <p id="tempolabel">Tempo:</p>
-                <select id="tempoSelect" class="dropdown" onchange="selectTempo()">
-                    <optgroup id="comtempos" label="Common Tempos">
-
-                    </optgroup>
-                    <optgroup id="alltempos" label="All Tempos">
-
-                    </optgroup>
-                    <!-- To be populated with tempo options -->
-                </select>
-                <p id="tempotext">Original: -</p>
-            </div>
-            <div id="informationContainer" class="controlcontainer">
-                <p id="ELtext" class="displayText">Entities in Area: 0</p>
-                <p id="PLtext" class="displayText">Powerups in Area: 0</p>
-                <p id="QEtext" class="displayText">BPB Quality: -</p>
-                <p id="NCtext" class="displayText">Spatial Conflicts: -</p>
-            </div>
-            <div id="trackList" class="controlcontainer">
-                <p id="trackListParagraph" class="titleText">Track List:</p>
-                <div id="trackedItemsContainer" class="controlcontainer">
-                    <!-- To be populated with track checkboxes -->
-                </div>
-            </div>
-            <div id="rightToolsContainer" class="controlcontainer">
-                <p id="trackSettingParagraph" class="titleText">Track Settings:</p>
-                <div id="trackNameContainer" class="spacedcontainer">
-                    <label for="trackName">Track Name</label>
-                    <input id="trackName" type="text" name="trackName" onchange="triggerTrackLabelChange()">
-                </div>
-                <div class="spacedcontainer">
-                    <label for="octaveShift">Octave Shift</label>
-                    <input id="octaveShift" type="number" name="octaveShift" min="-10" max="10" value="0" onchange="shiftTrackOctave()">
-                    <div id="semitonesContainer" hidden>
-                        <label for="semitones">Semitones</label>
-                        <input id="semitones" type="number" name="semitones" min="-11" max="11" value="0" onchange="shiftTrackOctave()">
-                    </div>
-                </div>
-                <div class="spacedcontainer">
-                    <p id="noteAboveScreenText" class="displayText">Notes above screen: 0</p>
-                    <p id="noteBelowScreenText" class="displayText">Notes below screen: 0</p>
-                    <button id="shiftBtn" onclick="shiftTrackIntoView()">Shift into View</button>
-                </div>
-                <div id="instrumentContainer" class="spacedcontainer">
-                    <!-- To be populated with track instrument changes -->
-                </div>
-            </div>
-            <div id="trackEditor" class="controlcontainer">
-                <p id="trackEditorParagraph" class="titleText">Track Editor:</p>
-                <button id="newTrackBtn" type="button" onclick="createNewTrack()">New Track</button>
-                <button id="deleteTrackBtn" onclick="triggerTrackDelete()" hidden>Delete Track</button>
-                <button id="setAsTransferTrackBtn" onclick="setSecondaryTrack()">Set Transfer</button>
-            </div>
-            <div id="displayOptions" class="controlcontainer">
-                <p id="trackListParagraph" class="titleText">Display:</p>
-                <div id="soloBoxContainer">
-                    <input id="soloBox" type="checkbox" name="soloBox" onchange="toggleSoloMode()">
-                    <label for="soloBox">Solo View</label>
-                </div>
-                <div>
-                    <input id="unsupportedEntities" type="checkbox" name="unsupportedEntities" onchange="toggleBuildRestriction()">
-                    <label for="unsupportedEntities">Allow Unsupported Entities</label>
-                </div>
-                <div>
-                    <input id="showPercussion" type="checkbox" name="showPercussion" onchange="togglePercussion()">
-                    <label for="showPercussion">Show Percussion</label>
-                </div>
-                <br>
-                <div>
-                    <input id="editToolsToggle" type="checkbox" name="editToolsToggle" onchange="toggleEditTools()">
-                    <label class="importantlabel" for="editToolsToggle">Editing Tools</label>
-                </div>
-                <div>
-                    <input id="advanceSettings" type="checkbox" name="advanceSettings" onchange="toggleAdvancedMode()">
-                    <label class="importantlabel" for="advanceSettings">Advanced Settings</label>
-                </div>
-            </div>
-            <div id="optionContainer" class="controlcontainer spacedcontainer">
-                <div>
-                    <label id="verticalShiftLabel" for="verticalShift">Vertical Shift</label>
-                    <input id="verticalShift" type="number" name="verticalShift" value="0" onchange="nudgeY()" min="-48" max="54">
-                </div>
-                <div id="noisecontrol" hidden>
-                    <label id="noiseThresholdLabel" for="noiseThreshold">Noise Threshold</label>
-                    <input id="noiseThreshold" type="range" min="0" max="127" value="0" onchange="changeNoiseThreshold()">
-                </div>
-                <!--<button id="bpbrecommend" type="button" disabled="true" onclick="changeToRecommendedBPB()">Recommend BPB</button>-->
-            </div>
-        </div>
-    </div>
-
-    <div id="startingContainer" class="smallspacedcontainer">
-        <p id="fileText" class="displayText">MIDI File:</p>
-        <input id="fileInput" type="file" onchange="loadFileFromInput()">
-        <button onclick="loadExample()">Load Example</button>
-        <button onclick="tutorialBtn()">Tutorial</button>
-        <button onclick="creditsBtn()">Credits</button>
-    </div>    
-</div>
-
-<div id="scripts">
-    <div id="dataScripts">
-        <script src="js/data/variables.js" defer></script>
-        <script src="js/data/MaestroTrack.js" defer></script>
-        <script src="js/data/MaestroNote.js" defer></script>
-    </div>
-    <div id="displayScripts">
-        <script src="js/display/DrawLayer.js" defer></script>
-        <script src="js/display/methods.js" defer></script>
-        <script src="js/display/variables.js" defer></script>
-    </div>
-    <div id="spaceScripts">
-        <script src="js/space/variables.js" defer></script>
-        <script src="js/space/methods.js" defer></script>
-        <script src="js/space/CollisionBox.js" defer></script>
-        <script src="js/space/Blueprint.js" defer></script>
-        <script src="js/space/Structure.js" defer></script>
-        <script src="js/space/NoteStructure.js" defer></script>
-        <script src="js/space/Cell.js" defer></script>
-    </div>
-    <div id="levelScripts">
-        <script src="js/level/variables.js" defer></script>
-        <script src="js/level/methods.js" defer></script>
-        <script src="js/level/Level.js" defer></script>
-        <script src="js/level/Area.js" defer></script>
-        <script src="js/level/PreloadedNote.js" defer></script>
-        <script src="js/level/PreloadedNoteGroup.js" defer></script>
-    </div>
-    <div id="midiScripts">
-        <script src="js/midi/variables.js" defer></script>
-        <script src="js/midi/methods.js" defer></script>
-        <script src="js/midi/MidiFile.js" defer></script>
-        <script src="js/midi/MidiEvent.js" defer></script>
-        <script src="js/midi/MidiTrack.js" defer></script>
-        <script src="js/midi/Note.js" defer></script>
-    </div>
-    <div id="audioScripts">
-        <script src="js/audio/variables.js" defer></script>
-        <script src="js/audio/methods.js" defer></script>
-        <script src="js/audio/NoteSchedule.js" defer></script>
-        <script src="js/audio/Instrument.js" defer></script>
-    </div>
-    <div id="playbackScripts">
-        <script src="js/playback/variables.js" defer></script>
-        <script src="js/playback/methods.js" defer></script>
-    </div>
-    <div id="maestroScripts">
-        <script src="js/maestro/UndoManager.js" defer></script>
-        <script src="js/maestro/EditEvent.js" defer></script>
-        <script src="js/maestro/methods.js" defer></script>
-        <script src="js/maestro/variables.js" defer></script>
-    </div>
-    <div id="mouseControlsScripts">
-        <script src="js/mouseControls/variables.js" defer></script>
-        <script src="js/mouseControls/methods.js" defer></script>
-    </div>
-    <div id="animationScripts">
-        <script src="js/animation/variables.js" defer></script>
-        <script src="js/animation/methods.js" defer></script>
-        <script src="js/animation/Animation.js" defer></script>
-    </div>
-</div>
-
-</body>
+	<head>
+		<title>Music Level Maestro</title>
+		<meta charset="utf-8"/>
+		<link rel="shortcut icon" href="favicon.ico">
+		<link rel="stylesheet" href="style.css">
+	  
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-152821049-1"></script>
+		<script>
+		    window.dataLayer = window.dataLayer || [];
+		    function gtag(){dataLayer.push(arguments);}
+		    gtag('js', new Date());
+		    gtag('config', 'UA-152821049-1');
+		</script>
+	</head>
+	<body>
+		<div class="contentcontainer">
+			<p class="title">Nothing to See Here!</p>
+			<br>
+            <p>Check out the <a href="https://h267.github.io">official release!</a></p>
+		</div>
+	</body>
 </html>
-
+	
