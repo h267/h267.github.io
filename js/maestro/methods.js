@@ -332,7 +332,7 @@ function drawLevel(redrawMini = false, noDOM = false) {
 				drawTile(tiles[tile], drawX * 16, drawY * 16);
 				if (level.numberOfOccupants[i][j] > 1 && !isBuildMode) { // Highlight any overalapping tiles in red
 					conflictCount++;
-					highlightTile(drawX, drawY, { style: 'rgba(255,0,0,0.4)' });
+					highlightTile(drawX, drawY, { style: 'rgba(0,0,0,0.3)' });
 				}
 				// Outline note blocks of the selected track
 				if (tile === 1 && level.isTrackOccupant[i][j][selectedTrack] && !isBuildMode) {
@@ -570,7 +570,7 @@ function getMM2Instrument(instrument) {
 		return 2;
 	} // Synth Effects
 	if (midiInstrument >= 105 && midiInstrument <= 112) {
-		return 14;
+		return 10;
 	} // Ethnic
 	if (midiInstrument >= 113 && midiInstrument <= 120) {
 		return 15;
@@ -1005,12 +1005,12 @@ function updateInstrumentContainer() { // TODO: Refactor grouping code
 function triggerInstrChange(selectedInstrument) {
 	let selectedInsIndex = alphabetizedInstruments[document.getElementById(`inspicker${selectedInstrument}`).value].pos;
 	// let selectedInsIndex = getInstrumentById(document.getElementById(`inspicker${selectedInstrument}`).value);
+	tracks[selectedTrack].instrumentChanges[selectedInstrument] = selectedInsIndex;
 	changeInstrument(
 		selectedTrack,
 		getMM2Instrument(midi.trks[selectedTrack].usedInstruments[selectedInstrument]),
 		selectedInsIndex + 2
 	);
-	tracks[selectedTrack].instrumentChanges[selectedInstrument] = selectedInsIndex;
 }
 
 /**
@@ -1093,9 +1093,9 @@ function getPercussionInstrument(key) {
 	case 59:
 		return getInstrumentById('spring');
 	case 65:
-		return getInstrumentById('billblaster');
+		return getInstrumentById('pswitch'); // getInstrumentById('billblaster');
 	case 66:
-		return getInstrumentById('billblaster');
+		return getInstrumentById('pswitch'); // getInstrumentById('billblaster');
 	case 76:
 		return getInstrumentById('post');
 	case 77:

@@ -1,5 +1,8 @@
-// Super Mario Maestro v1.4
+// Super Mario Maestro v1.4.0.1
 // made by h267
+
+console.log('Super Mario Maestro v1.4.0.1');
+console.log('by h267');
 
 // TODO: Re-enable gtag when releasing
 
