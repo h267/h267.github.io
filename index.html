@@ -55,7 +55,7 @@
             </div>
             <button id="buildBtn" class="btn-green" type="button" onclick="toggleBuildMode()">Auto-Build (Beta)</button>
         </div>
-        
+
         <p id="fstxt">File Scrubber</p>
         <div id="minimapcontainer" class="dispcontainer">
             <canvas id="minimap" width="100px" height="64"></canvas>
@@ -159,11 +159,11 @@
 
     <div id="startingContainer" class="smallspacedcontainer">
         <p id="fileText" class="displayText">MIDI File:</p>
-        <input id="fileInput" type="file" onchange="loadFileFromInput()">
+        <input id="fileInput" type="file" accept="audio/.mp3.mid, .mid, .midi" onchange="loadFileFromInput()">
         <button onclick="loadExample()">Load Example</button>
         <button onclick="tutorialBtn()">Tutorial</button>
         <button onclick="creditsBtn()">Credits</button>
-    </div>    
+    </div>
 </div>
 
 <div id="scripts">
