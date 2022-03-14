@@ -1,5 +1,6 @@
 body {
     background-color: #086a9a;
+    margin: 0;
 }
 
 
@@ -68,4 +69,32 @@ select {
 
 select::-moz-focus-inner {
     border: 0;
+}
+
+.studio-banner {
+    background-color: #282c34;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+}
+
+.studio-banner > p {
+    margin: 0;
+    font-size: 20px;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.studio-banner > p > a {
+    margin: 0;
+    font-size: 20px;
+    text-align: center;
+    color: #61dafb;
+}
+
+.studio-banner > a {
+    margin: 0;
+    font-size: 20px;
+    text-align: center;
+    color: #61dafb;
 }
